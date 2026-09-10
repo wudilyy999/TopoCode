@@ -31,7 +31,7 @@ description: TopoCode 仓库的框架设计规范速查与架构处理守则。�
 ## 关键存储（~/.TopoCode/）
 
 `config.json`（项目/模型/忽略名单）、`events-<slug>.jsonl`（事件流）、
-`knowledge/arch-<slug>.json`（架构知识 architecture.v2）、`memory/user-<slug>.json`（用户画像，UI 不展示）、`offsets.json`（轮询偏移）。
+`knowledge/arch-<slug>.json`（架构知识 architecture.v3，组件稳定 id）、`memory/user-<slug>.json`（用户画像，UI 不展示）、`offsets.json`（轮询偏移）。
 
 ## 验证
 

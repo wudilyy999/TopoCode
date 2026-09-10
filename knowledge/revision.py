@@ -58,10 +58,13 @@ def revise(project, model_cfg, lang='zh', full=False):
             from graph import builder
             snapshot = take_snapshot(project)
             struct = builder.structure(project, snapshot=snapshot, events=events)
+            previous = arch
             arch = client.abstract_architecture_full(
                 project, model_cfg, struct, builder.repo_info(project, snapshot=snapshot), lang=lang)
             if arch is None:
                 return 502, {'ok': False, 'error': 'Architecture synthesis failed'}
+            architecture.preserve_ids(previous, arch)
+            architecture.normalize_architecture(arch)
             arch['base_revision'] = len(events)
             arch['incorporated_events'] = {}
         else:

@@ -337,13 +337,14 @@ class ProjectAnalysisAgent:
             if not components:
                 return None
 
-            return {
+            from knowledge.architecture import normalize_architecture
+            return normalize_architecture({
                 "schema_version": ARCH_SCHEMA_VERSION,
                 "status": "analysis",
                 "overview": overview,
                 "onboarding": onboarding,
                 "components": components,
-            }
+            })
         except Exception:
             return None
 

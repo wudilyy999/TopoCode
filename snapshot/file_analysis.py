@@ -140,10 +140,17 @@ def _analyze_source_file(project_root: str, file_rel_path: str, ui_lang: str = '
     internal_imports = sorted(list(set(internal_imports)))
 
     # 3. Component & Layer Placement (architecture knowledge first)
-    arch = store_mod.load_architecture(abs_proj)
-    comp_data = arch if arch else (store_mod.load_components(abs_proj) or {})
+    from knowledge import architecture as arch_knowledge
+    arch = arch_knowledge.load_architecture(abs_proj)
+    if arch:
+        comp_data = arch
+    else:
+        comp_data = store_mod.load_components(abs_proj) or {}
+        if comp_data.get("components"):
+            arch_knowledge.normalize_architecture(comp_data)
     file_role = ""
     layer_name = "pipeline"
+    component_id = ""
     component_name = "通用逻辑模块"
     component_summary = "负责当前功能领域的基础逻辑与数据交互"
 
@@ -155,6 +162,7 @@ def _analyze_source_file(project_root: str, file_rel_path: str, ui_lang: str = '
                    or (c_dirs and clean_rel.startswith(tuple(c_dirs)))
                    or any(clean_rel.endswith(cf) for cf in c_files))
         if matched:
+            component_id = c.get("id", "")
             component_name = c.get("name", component_name)
             component_summary = c.get("summary", component_summary)
             layer_name = c.get("layer", layer_name)
@@ -222,6 +230,7 @@ def _analyze_source_file(project_root: str, file_rel_path: str, ui_lang: str = '
         "function_details": all_fn_details,
         "layer": layer_name,
         "component": {
+            "id": component_id,
             "name": component_name,
             "summary": component_summary
         },

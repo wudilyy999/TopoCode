@@ -101,11 +101,16 @@ change_summary以1-3句描述具体修改（最多400字），technical_meaning�
 布局由前端确定性代码负责，模型提供结构化内容。架构输出有版本/路径/数量检查，尚无严格 JSON Schema
 约束解码、输出修复重试或跨模型质量保证；开发规范文件也未作为运行时模型提示自动读取。
 
-### 4.2 架构知识（`knowledge/arch-<slug>.json`，schema `architecture.v2`）
+### 4.2 架构知识（`knowledge/arch-<slug>.json`，schema `architecture.v3`）
 
 `overview{one_liner,purpose,architecture_style}` + `onboarding[≤5]` +
-`components[≤10]{name,layer,layer_title,summary,responsibilities,key_features,entry_files,dirs,files,file_roles,depends_on,revision}`。
+`components[≤10]{id,name,layer,layer_title,summary,responsibilities,key_features,entry_files,dirs,files,file_roles,depends_on,revision}`。
+`id` 是稳定 kebab-case 身份（`^[a-z][a-z0-9-]{0,39}$`），`name` 只是展示名。
+`depends_on` 存目标 `id`；增量补丁仍可写 id 或展示名，入库时解析。
 layer 枚举：`presentation | agent | pipeline | infrastructure`。
+模型全量契约仍是 `architecture.v2`（按名称输出），服务端在 `knowledge/architecture.py` 分配 id 并升为 v3。
+旧档案无 id 时按名称/目录种子确定性补齐；全量重生按文件 Jaccard≥0.5 继承旧 id，未匹配组件重新分配。
+增量修订按 `id` 匹配，允许改名且 id 不变。
 全量生成走 `abstract_architecture`，增量修订走 `update_architecture`（只重写受影响组件）。
 所有架构写操作经 `knowledge/revision.py:revise`，按真实项目路径共享非阻塞锁，覆盖读→模型→存储全过程。
 冲突返回HTTP409；后台轮询遇忙保留待修订状态，下轮继续。持久化使用唯一临时文件再原子替换。
@@ -129,11 +134,12 @@ Python用AST提取普通/相对导入，JS/TS保留路径扩展名并解析tsx/j
 
 ### 4.2.1 分层蓝图展示契约（`graph/builder.py:_build_blueprint` → `web/index.html`）
 
-- 蓝图载荷：`layers[4]{id,name,subtitle,color,components[]}` + `ordered_names[]`。
-  每个组件携带 `depends_on[]`（未知目标与自引用已过滤）与 `dep_sources{name→[code|model]}`
-  （`code` = 文件 import 推断，`model` = 架构知识判断；`depends_on` 字段本身保持不变）。
+- 蓝图载荷：`layers[4]{id,name,subtitle,color,components[]}` + `ordered_ids[]` + `ordered_names[]`。
+  每个组件携带稳定 `id`、展示 `name`、`depends_on[]`（存目标 id，未知目标与自引用已过滤）
+  与 `dep_sources{id→[code|model]}`
+  （`code` = 文件 import 推断，`model` = 架构知识判断）。
 - 布局：`bpArrangeModules` 使用 12 列网格，presentation 入口在顶部；agent 中连接度最高
-  的模块居中（名称打破平局），其余运行模块分布两侧，剩余模块和 infrastructure 在底部并排。
+  的模块居中（稳定 id 打破平局），其余运行模块分布两侧，剩余模块和 infrastructure 在底部并排。
   缺少 agent 时从运行模块选择中心；孤立模块正常展示。布局为确定性展示选择，关系来自依赖证据。
 - 视觉：中性石墨工作台与深色项目画布，蓝色主操作，子系统与功能块通过层级底色和细边框区分，
   核心模块使用蓝灰底；分层色标保留。标题使用真实项目目录名与语言标签，720px最小图宽，窄面板局部横向滚动。
@@ -148,7 +154,8 @@ Python用AST提取普通/相对导入，JS/TS保留路径扩展名并解析tsx/j
 - 重绘：ResizeObserver 监听画布（含 splitter/折叠），rAF 合并重绘并清理旧边；
   滚动不重绘（相对坐标不变）。
 - 交互：悬停/聚焦/选中同时高亮直接依赖与被依赖方（图例标明方向）；
-  选中为项目键内存 Map（`BP_SEL`），渲染周期内稳定、不落浏览器存储；
+  选中为项目键内存 Map（`BP_SEL`，值为组件 id），渲染周期内稳定、不落浏览器存储；
+  卡片 `data-comp`、依赖图与连线按 id 寻址，详情和边提示显示 `name`；
   词典关键词点击与文件链接不触发选中；关键词高亮与中英 I18N 保留
   （标题、计数、操作与边提示走 `bp_*` I18N；模型生成的模块内容沿用其分析语言）。
 - 顶栏：`header` 允许换行、子项最小宽收敛，窄屏时右上控制组不被裁剪。
@@ -190,7 +197,7 @@ project_relevance?, related_concepts[id...], interview_questions[{question,answe
 config.json                 登记项目列表、模型供应商列表、active_model_id、忽略名单
 events-<slug>.jsonl         每项目事件流（append + upsert，文件锁并发安全）
 components-<slug>.json      旧版组件存储（兼容）
-knowledge/arch-<slug>.json  架构知识（architecture.v2）
+knowledge/arch-<slug>.json  架构知识（architecture.v3，组件稳定 id）
 memory/user-<slug>.json     用户画像记忆（user.memory.v1，后台维护，UI 不展示）
 offsets.json                各会话文件轮询偏移
 ```

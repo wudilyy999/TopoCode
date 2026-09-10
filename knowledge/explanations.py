@@ -72,7 +72,8 @@ def save_branch(project, scope, lang, agent):
 
 def context(project, scope, lang, model):
     project = os.path.realpath(project)
-    arch = store.load_architecture(project) or {}
+    from knowledge import architecture as arch_knowledge
+    arch = arch_knowledge.load_architecture(project) or {}
     evidence = {'overview': arch.get('overview', {}), 'components': arch.get('components', [])}
     branch = read(location('branches', [project, scope, lang]))
     messages = branch['messages'] if branch and branch['model'] == identity(model) else []

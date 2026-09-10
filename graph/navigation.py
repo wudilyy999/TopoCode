@@ -15,7 +15,9 @@ def build_navigation(struct, components):
         entry = 'analysis' if path in component.get('entry_files', []) else (
             'candidate' if file_role(path) == 'entry' else '')
         files.append({
-            'path': path, 'language': language_for(path), 'component': component.get('name', ''),
+            'path': path, 'language': language_for(path),
+            'component': component.get('name', ''),
+            'component_id': component.get('id', ''),
             'role': role or struct.get('docs', {}).get(path, ''),
             'role_source': 'analysis' if role else 'evidence', 'entry': entry,
             'symbols': [{'name': s['name'], 'line': s['line']} for s in symbols[:8]],

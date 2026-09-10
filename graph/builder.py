@@ -241,12 +241,12 @@ def _infer_file_role(path, syms, doc=""):
 def _order_blueprint_components(names, dep_map):
     """Dependency-driven stable ordering, cycle-safe via SCC condensation.
 
-    Names are module identifiers; dep_map maps each name to its known
+    Ids are stable module identifiers; dep_map maps each id to its known
     in-repo dependencies (already filtered to unknown targets and
-    self-references). Returns (ordered_names, order_rank) where
-    order_rank maps a name to its stable position. Deterministic: ties
+    self-references). Returns (ordered_ids, order_rank) where
+    order_rank maps an id to its stable position. Deterministic: ties
     break alphabetically; mutually dependent modules (cycles) condense
-    into one SCC block ordered internally by name.
+    into one SCC block ordered internally by id.
     """
     names = list(dict.fromkeys(names))
     name_set = set(names)
@@ -340,13 +340,18 @@ def _build_blueprint(comp_data, struct, events, project=""):
             if p:
                 file_changes[p] = file_changes.get(p, 0) + 1
 
-    # Map file to component
+    # Map file to component identity
     file_to_comp = {}
     raw_components = comp_data.get("components", []) or []
+    by_id = {}
+    by_name = {}
     for comp in raw_components:
-        cname = comp.get("name", "?")
+        cid = arch_knowledge.component_id(comp)
+        by_id[cid] = comp
+        if comp.get("name"):
+            by_name[comp["name"]] = cid
         for f in comp.get("files", []) or []:
-            file_to_comp[f] = cname
+            file_to_comp[f] = cid
 
     # Calculate component-to-component dependencies from code imports,
     # with provenance tracked per dependency target.
@@ -359,9 +364,16 @@ def _build_blueprint(comp_data, struct, events, project=""):
             comp_deps.setdefault(c_src, set()).add(c_dst)
             comp_dep_sources.setdefault(c_src, {}).setdefault(c_dst, set()).add("code")
 
+    def _dep_id(ref):
+        key = str(ref or "").strip()
+        if key in by_id:
+            return key
+        return by_name.get(key)
+
     docs = struct.get("docs", {})
     for comp in raw_components:
-        cname = comp.get("name", "?")
+        cid = arch_knowledge.component_id(comp)
+        cname = comp.get("name", cid)
         cfiles = comp.get("files", []) or []
         layer_id = comp.get("layer")
         if layer_id not in layer_map:
@@ -422,20 +434,21 @@ def _build_blueprint(comp_data, struct, events, project=""):
                 "key_functions": ef_funcs[:4]
             })
 
-        explicit_raw = comp.get("depends_on") or []
-        known_names = {c.get("name", "?") for c in raw_components}
-        code_deps = sorted(comp_deps.get(cname, set()) & known_names)
+        explicit_raw = [_dep_id(d) for d in (comp.get("depends_on") or [])]
+        known_ids = set(by_id)
+        code_deps = sorted(comp_deps.get(cid, set()) & known_ids)
         explicit_deps = sorted({d for d in explicit_raw
-                                if d in known_names and d != cname})
+                                if d in known_ids and d != cid})
         merged_deps = sorted(set(explicit_deps) | set(code_deps))
         for d in explicit_deps:
-            comp_dep_sources.setdefault(cname, {}).setdefault(d, set()).add("model")
-        dep_sources = {d: sorted(comp_dep_sources.get(cname, {}).get(d, {"model"}))
+            comp_dep_sources.setdefault(cid, {}).setdefault(d, set()).add("model")
+        dep_sources = {d: sorted(comp_dep_sources.get(cid, {}).get(d, {"model"}))
                        for d in merged_deps}
 
         features = comp.get("key_features") or all_symbols[:4]
 
         layer_map[layer_id]["components"].append({
+            "id": cid,
             "name": cname,
             "layer": layer_id,
             "summary": comp.get("summary", ""),
@@ -451,13 +464,17 @@ def _build_blueprint(comp_data, struct, events, project=""):
             "revision": comp.get("revision", 0),
         })
 
-    ordered_names, order_rank = _order_blueprint_components(
-        [c.get("name", "?") for c in raw_components],
-        {c.get("name", "?"): [d for d in (c.get("depends_on") or [])] +
-         sorted(comp_deps.get(c.get("name", "?"), set())) for c in raw_components})
+    ordered_ids, order_rank = _order_blueprint_components(
+        [arch_knowledge.component_id(c) for c in raw_components],
+        {arch_knowledge.component_id(c):
+         [d for d in (_dep_id(x) for x in (c.get("depends_on") or [])) if d] +
+         sorted(comp_deps.get(arch_knowledge.component_id(c), set()))
+         for c in raw_components})
     for layer in layer_map.values():
         layer["components"].sort(
-            key=lambda c: (order_rank.get(c["name"], 0), c["name"]))
+            key=lambda c: (order_rank.get(c["id"], 0), c["id"]))
+    name_of = {arch_knowledge.component_id(c): c.get("name") or arch_knowledge.component_id(c)
+               for c in raw_components}
 
     return {
         "status": comp_data.get("status", "missing"),
@@ -468,7 +485,8 @@ def _build_blueprint(comp_data, struct, events, project=""):
             "base_revision": comp_data.get("base_revision", 0),
             "updated_at": comp_data.get("updated_at", ""),
         },
-        "ordered_names": ordered_names,
+        "ordered_ids": ordered_ids,
+        "ordered_names": [name_of[i] for i in ordered_ids],
         "layers": [layer_map[l["id"]] for l in BLUEPRINT_LAYERS]
     }
 
@@ -491,12 +509,13 @@ def _fallback_components(project, struct):
             "entry_files": paths[:2],
             "files": paths[:12]
         })
+    arch_knowledge.ensure_component_ids(components)
     return {"schema_version": "components.fallback",
             "components": components, "status": "fallback"}
 
 
 def load_components(project, struct=None):
-    arch = store_mod.load_architecture(project)
+    arch = arch_knowledge.load_architecture(project)
     if arch and arch.get("components"):
         if struct is not None:
             arch_knowledge.expand_files(arch, struct)
@@ -508,6 +527,7 @@ def load_components(project, struct=None):
             data = json.load(handle)
         if isinstance(data, dict) and isinstance(data.get("components"), list):
             data.setdefault("status", "analysis")
+            arch_knowledge.normalize_architecture(data)
             return data
     except (OSError, ValueError):
         pass
@@ -549,9 +569,9 @@ def build_map(project, dropped=0, top_n=60):
     comp_of = {}
     comp_origin = "analysis" if comp_data.get("status") == "analysis" else "evidence"
     for comp in comp_data.get("components", []):
-        cid = "component:%s" % comp.get("name", "?")
+        cid = "component:%s" % arch_knowledge.component_id(comp)
         nodes.append({"id": cid, "kind": "component",
-                      "label": comp.get("name", "?"),
+                      "label": comp.get("name") or arch_knowledge.component_id(comp),
                       "summary": comp.get("summary", ""), "origin": comp_origin})
         edges.append({"source": "repo", "target": cid, "kind": "contains",
                       "origin": comp_origin})

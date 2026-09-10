@@ -117,7 +117,8 @@ def update_architecture_patch(
     lines = []
     for comp in arch.get("components", []):
         entry = ", ".join((comp.get("entry_files") or comp.get("files") or [])[:3])
-        lines.append("%s | %s | %s | 入口: %s" % (
+        lines.append("%s | %s | %s | %s | 入口: %s" % (
+            comp.get("id") or comp.get("name", "?"),
             comp.get("name", "?"), comp.get("layer", "?"),
             comp.get("summary", ""), entry or "无"))
     changed = "\n".join("%s (+%s/-%s)" % (f.get("path"), f.get("additions", 0),

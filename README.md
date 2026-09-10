@@ -221,7 +221,7 @@ TopoCode/
 ### 1. Continuous, Evidence-Backed Project Understanding
 - [x] Layered 4-tier architectural blueprint and component mapping.
 - [x] Incremental architecture revision triggered by agent modifications.
-- [ ] Stable component IDs decoupled from display names.
+- [x] Stable component IDs decoupled from display names.
 - [ ] Fine-grained evidence attribution for architecture relationships (Static Import vs Model Inference).
 - [ ] Automated change-impact delta explanations per architectural component.
 - [ ] Pre-commit architecture candidate comparison with rollback support.

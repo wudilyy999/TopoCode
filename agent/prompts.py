@@ -58,7 +58,7 @@ Requirements:
 3. components: 4-8 system-level components across the 4 layers. Give entry_files (1-5 entry points) + dirs (prefix like "server/", can be empty) + files (core files, <=30).
 4. responsibilities: 2-4 concrete responsibilities for each component (each <=60 chars).
 5. file_roles: Must provide specific roles/capabilities for entry files and core files (path must exist in file list, role <=60 chars, <=20 entries). Do not leave empty.
-6. depends_on: Names of other components this component depends on.
+6. depends_on: Names of other components this component depends on. The server assigns a stable kebab-case id from the name; keep names unique.
 7. Return STRICTLY one JSON object:
 {{
   "schema_version": "{ARCH_SCHEMA_VERSION}",
@@ -111,7 +111,7 @@ Requirements:
 3. 提炼 4 到 8 个系统级组件归入上述分层。大项目不必穷举文件：每个组件给 entry_files（最该先读的 1-5 个入口文件）+ dirs（该组件负责的目录前缀，如 "server/"、可为空）+ files（最核心的文件，<=30 个）。
 4. responsibilities 写该组件的具体职责（2-4 条，每条 <=40 字）。
 5. file_roles 必须给出：该组件每个 entry_file 与核心文件的核心职责与功能定位（path 必须真实存在于文件列表，role <=40 字，<=20 个）。必须具体描述其提供什么能力或模块，严禁空泛词汇。这是该文件在组件中定位的真相来源，不许留空。
-6. depends_on 指明依赖的其他组件名（形成数据/调用流向）。
+6. depends_on 指明依赖的其他组件名（形成数据/调用流向）。服务端会从名称派生稳定 kebab-case id，名称在档案内保持唯一。
 7. 严格只返回一个 JSON 对象：
 {{
   "schema_version": "{ARCH_SCHEMA_VERSION}",
@@ -167,20 +167,21 @@ Rules:
   "overview_patch": null,
   "updates": [
     {{
-      "name": "Existing Component Name",
+      "id": "existing-stable-id",
+      "name": "Existing Component Name (rename allowed, id stays)",
       "summary": "Revised summary in English (<=120 chars)",
       "responsibilities": ["Revised responsibility (<=60 chars)"],
-      "depends_on": ["Revised dependencies"],
+      "depends_on": ["Revised dependency id or name"],
       "add_files": ["added/relative/path"],
       "remove_files": [],
       "file_roles": [{{"path": "file/path", "role": "Role description in English"}}]
     }}
   ],
   "creates": [],
-  "reassign": []
+  "reassign": [{"path": "changed/file", "component": "target-id-or-name"}]
 }}
 
-[Existing Components Summary]:
+[Existing Components Summary (id | name | layer | summary | entry files)]:
 {comp_summary}
 
 [Changed Files in This Round]:
@@ -203,27 +204,28 @@ Rules:
   "overview_patch": null 或 {{"one_liner": "...", "purpose": "...", "architecture_style": "..."}},
   "updates": [
     {{
-      "name": "已存在的组件名（必须逐字匹配）",
+      "id": "已有稳定id",
+      "name": "组件展示名（可改名，id不变）",
       "summary": "修订后的职责描述（<=100字）",
       "responsibilities": ["修订后的职责（<=40字）"],
-      "depends_on": ["修订后的依赖组件名"],
+      "depends_on": ["修订后的依赖id或组件名"],
       "add_files": ["本次改动中归属该组件的文件相对路径"],
       "remove_files": ["不再属于该组件的文件"],
       "file_roles": [{{"path": "文件相对路径", "role": "该文件在组件中的作用（<=40字）"}}]
     }}
   ],
   "creates": [
-    {{"name": "新组件名", "layer": "presentation|agent|pipeline|infrastructure",
+    {{"id": "new-kebab-id", "name": "新组件名", "layer": "presentation|agent|pipeline|infrastructure",
       "layer_title": "中文分层名", "summary": "职责（<=100字）",
       "responsibilities": [], "key_features": [],
       "entry_files": [], "dirs": [], "files": [],
       "file_roles": [{{"path": "...", "role": "..."}}],
       "depends_on": []}}
   ],
-  "reassign": [{{"path": "改动文件", "component": "目标组件名"}}]
+  "reassign": [{{"path": "改动文件", "component": "目标id或组件名"}}]
 }}
 
-【现有组件档案（名称 | 分层 | 职责摘要 | 入口文件）】
+【现有组件档案（id | 名称 | 分层 | 职责摘要 | 入口文件）】
 {comp_summary}
 
 【本次改动文件】

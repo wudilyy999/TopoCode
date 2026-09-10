@@ -1139,6 +1139,7 @@ let BP_SEL = new Map();
 let BP_DEPS = {};
 let BP_DEPENDENTS = {};
 let BP_PROV = {};
+let BP_LABEL = {};
 let BP_REDRAW_QUEUED = false;
 let BP_RO = null;
 let AGENT_FILTER = { "kimi-code": true, "claude-code": true, "codex": true };
@@ -2511,17 +2512,22 @@ function renderLayeredBlueprint() {
   const pending = DATA.architecture_job?.pending || 0;
   syncArchitectureButtons();
 
-  const compByName = {};
-  layers.forEach(l => (l.components || []).forEach(c => { compByName[c.name] = c; }));
-  const names = Object.keys(compByName);
+  const compById = {};
+  layers.forEach(l => (l.components || []).forEach(c => { compById[c.id || c.name] = c; }));
+  const ids = Object.keys(compById);
   BP_DEPS = {};
   BP_DEPENDENTS = {};
   BP_PROV = {};
-  names.forEach(n => { BP_DEPS[n] = []; BP_DEPENDENTS[n] = []; });
-  names.forEach(n => {
-    const comp = compByName[n];
+  BP_LABEL = {};
+  ids.forEach(n => {
+    BP_DEPS[n] = [];
+    BP_DEPENDENTS[n] = [];
+    BP_LABEL[n] = compById[n].name || n;
+  });
+  ids.forEach(n => {
+    const comp = compById[n];
     (comp.depends_on || []).forEach(d => {
-      if (!compByName[d] || d === n || BP_DEPS[n].includes(d)) return;
+      if (!compById[d] || d === n || BP_DEPS[n].includes(d)) return;
       BP_DEPS[n].push(d);
       BP_DEPENDENTS[d].push(n);
       const prov = ((comp.dep_sources || {})[d] || ["model"]).slice().sort();
@@ -2529,7 +2535,7 @@ function renderLayeredBlueprint() {
     });
   });
 
-  if (bpSelected() && !compByName[bpSelected()]) bpSetSelected(null);
+  if (bpSelected() && !compById[bpSelected()]) bpSetSelected(null);
 
   const overviewHtml = overview.one_liner ? `
     <div class="arch-overview">
@@ -2538,8 +2544,8 @@ function renderLayeredBlueprint() {
       <div class="arch-meta-row">
         ${overview.architecture_style ? `<span class="arch-style-chip">🏗 ${linkifyKeywords(overview.architecture_style)}</span>` : ''}
         <span class="arch-updated">${analysis.updated_at
-          ? `${esc(t("bp_arch_updated"))} ${esc(analysis.updated_at)} · ${esc(t("bp_arch_rev", analysis.analysis_revision || 0))} · ${names.length} ${esc(t("bp_lane_unit"))}`
-          : `${esc(t("bp_arch_done"))} · ${names.length} ${esc(t("bp_lane_unit"))}`}</span>
+          ? `${esc(t("bp_arch_updated"))} ${esc(analysis.updated_at)} · ${esc(t("bp_arch_rev", analysis.analysis_revision || 0))} · ${ids.length} ${esc(t("bp_lane_unit"))}`
+          : `${esc(t("bp_arch_done"))} · ${ids.length} ${esc(t("bp_lane_unit"))}`}</span>
       </div>
       ${(bp.onboarding || []).length ? `
         <div class="onboarding-steps">
@@ -2569,7 +2575,7 @@ function renderLayeredBlueprint() {
   const components = layers.flatMap(l => (l.components || []).map(c => ({...c, layer: l.id})));
   const placements = bpArrangeModules(components);
   const sel = bpSelected();
-  const detailHtml = sel ? bpDetailPanel(compByName[sel]) : "";
+  const detailHtml = sel ? bpDetailPanel(compById[sel]) : "";
   const projectName = (PROJECT || "TopoCode").split("/").filter(Boolean).pop();
   const modulesHtml = placements.map(p => bpModuleCard(p.comp, p)).join("");
   container.innerHTML = `
@@ -2729,8 +2735,11 @@ function bpArrangeModules(components) {
   const entry = components.filter(c => c.layer === "presentation");
   const runtime = components.filter(c => c.layer !== "presentation" && c.layer !== "infrastructure");
   const candidates = runtime.filter(c => c.layer === "agent");
-  const degree = c => (BP_DEPS[c.name] || []).length + (BP_DEPENDENTS[c.name] || []).length;
-  const core = (candidates.length ? candidates : runtime).slice().sort((a,b) => degree(b)-degree(a) || a.name.localeCompare(b.name))[0];
+  const degree = c => {
+    const id = c.id || c.name;
+    return (BP_DEPS[id] || []).length + (BP_DEPENDENTS[id] || []).length;
+  };
+  const core = (candidates.length ? candidates : runtime).slice().sort((a,b) => degree(b)-degree(a) || (a.id || a.name).localeCompare(b.id || b.name))[0];
   let row = 1;
   for (let i = 0; i < entry.length; i += 2) {
     const group = entry.slice(i, i+2), span = 12 / group.length;
@@ -2754,11 +2763,12 @@ function bpArrangeModules(components) {
 }
 
 function bpModuleCard(comp, position) {
+  const cid = comp.id || comp.name;
   const features = [...new Set((comp.key_features?.length ? comp.key_features : comp.responsibilities || []).filter(Boolean))];
   const blocks = features.length ? features : [comp.summary || t("bp_no_detail")];
-  return `<section class="subsystem-card bp-position-${position.kind}" data-comp="${esc(comp.name)}"
+  return `<section class="subsystem-card bp-position-${position.kind}" data-comp="${esc(cid)}"
     style="grid-column:${position.col} / span ${position.span};grid-row:${position.row}"
-    tabindex="0" role="button" aria-label="${esc(comp.name)}" aria-pressed="${bpSelected() === comp.name}">
+    tabindex="0" role="button" aria-label="${esc(comp.name)}" aria-pressed="${bpSelected() === cid}">
     <div class="subsystem-name" title="${esc(comp.summary || '')}">${esc(comp.name)}</div>
     <p class="bp-module-summary">${esc(comp.summary || '')}</p>
     <div class="bp-function-grid">${blocks.slice(0,6).map(f => `<div class="bp-function">${linkifyKeywords(f)}</div>`).join("")}</div>
@@ -2768,6 +2778,7 @@ function bpModuleCard(comp, position) {
 }
 
 function bpDetailPanel(comp) {
+  const cid = comp.id || comp.name;
   const cname = comp.name;
   const resps = comp.responsibilities || [];
   const feats = comp.key_features || [];
@@ -2780,10 +2791,11 @@ function bpDetailPanel(comp) {
     return p.role || (comp.file_roles || {})[p.path] || "";
   };
   const filePathOf = (p) => (typeof p === "string" ? p : p.path);
-  const depsOn = BP_DEPS[cname] || [];
-  const depsBy = BP_DEPENDENTS[cname] || [];
+  const depsOn = BP_DEPS[cid] || [];
+  const depsBy = BP_DEPENDENTS[cid] || [];
+  const depLabel = (d) => BP_LABEL[d] || d;
   return `
-    <div class="bp-detail" id="bp-detail" data-comp="${esc(cname)}">
+    <div class="bp-detail" id="bp-detail" data-comp="${esc(cid)}">
       <div class="bp-detail-head">
         <div class="bp-detail-title">🧩 ${esc(cname)} · ${esc(comp.summary || "")}</div>
         <button class="bp-detail-close" onclick="bpSelectModule(null)">${esc(t("bp_detail_close"))}</button>
@@ -2798,11 +2810,11 @@ function bpDetailPanel(comp) {
       </div>
       <div>
         <div class="bp-detail-sec-title">${esc(t("bp_detail_dep_on"))}</div>
-        <div class="subsystem-deps">${depsOn.length ? depsOn.map(d => `<span class="dep-item">${esc(d)}</span>`).join("") : esc(t("bp_no_detail"))}</div>
+        <div class="subsystem-deps">${depsOn.length ? depsOn.map(d => `<span class="dep-item">${esc(depLabel(d))}</span>`).join("") : esc(t("bp_no_detail"))}</div>
       </div>
       <div>
         <div class="bp-detail-sec-title">${esc(t("bp_detail_dep_by"))}</div>
-        <div class="subsystem-deps">${depsBy.length ? depsBy.map(d => `<span class="dep-item">${esc(d)}</span>`).join("") : esc(t("bp_no_detail"))}</div>
+        <div class="subsystem-deps">${depsBy.length ? depsBy.map(d => `<span class="dep-item">${esc(depLabel(d))}</span>`).join("") : esc(t("bp_no_detail"))}</div>
       </div>
       <div>
         <div class="bp-detail-sec-title">${esc(t("bp_detail_entries"))}</div>
@@ -2972,7 +2984,7 @@ function bpDrawEdges() {
     path.setAttribute("class","bp-edge "+(prov.includes("code")?"code":"model"));
     path.setAttribute("marker-end","url(#bp-arrow)"); path.dataset.s=src;path.dataset.t=dst;
     const title=document.createElementNS(NS,"title");
-    title.textContent=t("bp_edge_tip").replaceAll("{s}",src).replaceAll("{d}",dst).replaceAll("{p}",prov.join("+"));
+    title.textContent=t("bp_edge_tip").replaceAll("{s}",BP_LABEL[src]||src).replaceAll("{d}",BP_LABEL[dst]||dst).replaceAll("{p}",prov.join("+"));
     path.appendChild(title);svg.appendChild(path);
   });
   if (bpSelected()) bpHighlight(bpSelected());
