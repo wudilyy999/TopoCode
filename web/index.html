@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>vibe-learning · 独立外挂式 Agent 项目实时分析系统</title>
+<title>TopoCode · 独立外挂式 Agent 项目实时分析系统</title>
 <style>
   :root {
     --bg: #101216;
@@ -885,7 +885,7 @@
 
 <header>
   <div class="brand">
-    vibe-learning
+    TopoCode
     <span>独立外挂式 Agent 观察</span>
   </div>
   <div class="project-headline-badge" id="project-headline-card">
@@ -1147,7 +1147,7 @@ let HIDE_CHATTER = true;
 let QUERY = "";
 
 
-let CURRENT_LANG = localStorage.getItem("vibe_learning_lang") || "zh";
+let CURRENT_LANG = localStorage.getItem("topocode_lang") || "zh";
 
 const I18N = {
   zh: {
@@ -1420,7 +1420,7 @@ function t(key, n) {
 
 function toggleLanguage() {
   CURRENT_LANG = CURRENT_LANG === "zh" ? "en" : "zh";
-  localStorage.setItem("vibe_learning_lang", CURRENT_LANG);
+  localStorage.setItem("topocode_lang", CURRENT_LANG);
   applyI18n();
   renderCurrentRightView();
   renderTimeline();
@@ -1724,7 +1724,7 @@ function renderTechDictEntry(entry, fallbackId = "") {
     ${entry.project_relevance ? `
       <div class="dict-block" style="background:#0f1d16; border:1px solid #1f4327; border-left:3px solid #56d364;">
         <div class="dict-block-title" style="color:#56d364;">
-          <span>🏗️</span> 在当前项目 (vibe-learning) 中的落地与作用
+          <span>🏗️</span> 在当前项目 (TopoCode) 中的落地与作用
         </div>
         <div class="dict-block-content" style="color:#7ee787;">
           ${linkifyKeywords(entry.project_relevance)}
@@ -1947,7 +1947,7 @@ function parseAndCleanTurn(ev) {
 function cleanProjectHeadline(raw) {
   if (!raw) return "";
   let h = raw.trim();
-  // 去除冗余的自身前缀如 "vibe-learning（独立外挂式..." -> "独立外挂式..."
+  // 去除冗余的自身前缀如 "TopoCode（独立外挂式..." -> "独立外挂式..."
   h = h.replace(/^Project\s*Map\s*[（(:]\s*/i, "").replace(/[）)]$/, "");
   return h || raw;
 }
@@ -2570,7 +2570,7 @@ function renderLayeredBlueprint() {
   const placements = bpArrangeModules(components);
   const sel = bpSelected();
   const detailHtml = sel ? bpDetailPanel(compByName[sel]) : "";
-  const projectName = (PROJECT || "vibe-learning").split("/").filter(Boolean).pop();
+  const projectName = (PROJECT || "TopoCode").split("/").filter(Boolean).pop();
   const modulesHtml = placements.map(p => bpModuleCard(p.comp, p)).join("");
   container.innerHTML = `
     <div class="bp-scroll"><section class="bp-sheet">
@@ -3933,7 +3933,7 @@ function connectSSE() {
 }
 
 /* ================= 左右面板拉伸 (Splitter) 与独立折叠 ================= */
-let PANEL_RATIO = parseFloat(localStorage.getItem("vibe_learning_panel_ratio") || "0.42");
+let PANEL_RATIO = parseFloat(localStorage.getItem("topocode_panel_ratio") || "0.42");
 let IS_LEFT_COLLAPSED = false;
 let IS_RIGHT_COLLAPSED = false;
 
@@ -3976,7 +3976,7 @@ function initPanelSplitter() {
     isDragging = false;
     resizer.classList.remove("active");
     document.body.classList.remove("resizing");
-    localStorage.setItem("vibe_learning_panel_ratio", PANEL_RATIO.toString());
+    localStorage.setItem("topocode_panel_ratio", PANEL_RATIO.toString());
   });
 }
 
@@ -4041,10 +4041,10 @@ async function untrackProject(path) {
       if (path === PROJECT) {
         if (remaining.length > 0) {
           PROJECT = remaining[0];
-          localStorage.setItem("vibe_learning_project", PROJECT);
+          localStorage.setItem("topocode_project", PROJECT);
         } else {
           PROJECT = "";
-          localStorage.removeItem("vibe_learning_project");
+          localStorage.removeItem("topocode_project");
         }
       }
       await initConfig();

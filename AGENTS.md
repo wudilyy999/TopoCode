@@ -1,4 +1,4 @@
-# AGENTS.md — vibe-learning 仓库协作规则
+# AGENTS.md — TopoCode 仓库协作规则
 
 本仓库是**独立外挂式 Agent 项目实时分析系统**。在这里工作的任何 AI 必须先读
 `docs/ARCHITECTURE.md`（权威架构规范：模块地图、数据流、Schema、存储布局、扩展点）。
@@ -23,7 +23,7 @@ python3 server.py --project <被观察目录> --port 8765
 
 ## 不可违反的边界
 
-1. 只读观察：永不写被观察项目目录与任何 agent 家目录；状态只写 `~/.vibe-learning/`。
+1. 只读观察：永不写被观察项目目录与任何 agent 家目录；状态只写 `~/.TopoCode/`。
 2. HTTP 只绑 `127.0.0.1`。
 3. 送模型的只有脱敏摘要与文件元数据，源码正文/diff不送模型；凭据一律脱敏。
    文件导读允许经/api/file_code按需向本地页面返回脱敏代码块，限登记项目内文本文件512KB、单块2000行。

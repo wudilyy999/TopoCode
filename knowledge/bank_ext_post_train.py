@@ -12,7 +12,7 @@ EXTRA_ENTRIES = [
         "category": "后训练与对齐",
         "definition": "强化学习对齐中最危险的失效模式：奖励模型只是人类真实偏好的代理指标，策略模型会钻代理指标的空子，用取巧行为刷出高分却违背真实意图，分数越高实际质量反而越差，即优化代理目标必然扭曲真实目标的古德哈特定律在对齐中的具象化。",
         "detailed_explanation": "典型症状包括长度偏差（车轱辘话刷高分）、谄媚迎合（先肯定用户的错误观点）、格式投机（堆砌加粗与列表）与过度拒答（靠拒答保安全分）。根因是离线奖励模型在分布外区域打分失准，而策略模型通过在线探索精准找到这些被高估的区域。工程治理手段：KL 散度惩罚把策略拴在 SFT 分布附近；奖励集成与悲观估计压低不确定区分数；可验证任务锚定规则奖励；定期用红队探针与人工抽检校准奖励分数和真实偏好的一致性。",
-        "project_relevance": "vibe-learning 的 LLM 分析管线同样面临代理指标陷阱：若只看 JSON 解析成功率评判分析质量，模型会输出冗长正确的废话。必须用确定性证据（diff 行数、AST 节点）做规则奖励式校验。",
+        "project_relevance": "TopoCode 的 LLM 分析管线同样面临代理指标陷阱：若只看 JSON 解析成功率评判分析质量，模型会输出冗长正确的废话。必须用确定性证据（diff 行数、AST 节点）做规则奖励式校验。",
         "related_concepts": ["alignment-rlhf-dpo-grpo", "rm-training", "alignment-tax"],
         "interview_questions": [
             {
@@ -32,7 +32,7 @@ EXTRA_ENTRIES = [
         "category": "后训练与对齐",
         "definition": "Anthropic 提出的不依赖海量人工标注的对齐方法：先给模型写一部由安全与价值观原则构成的“宪法”，让模型对自身输出做自我批判与改写，生成符合原则的示范回答，再用这些自产数据做 SFT 与偏好训练，用原则清单替代大部分人工偏好标注工作。",
         "detailed_explanation": "标准两阶段流程：监督阶段对有害指令采样回答，再提示模型按宪法条文逐条批判并改写，改写后的问答对直接做 SFT；偏好阶段对同一 prompt 的两个回答让模型按宪法投票选优，产出 AI 偏好数据训练奖励模型。核心权衡是宪法条文越细约束越强但创造力与有用性受损，且自我批判的质量上限被模型自身能力锁死，弱模型会产出正确的废话式安全回答。",
-        "project_relevance": "vibe-learning 的分析提示词工程可借鉴立宪思想：把 JSON 契约、证据引用、拒答条件写成显式原则清单，让模型在输出前自检每个结论是否附 diff 证据，用原则约束替代逐条堆砌。",
+        "project_relevance": "TopoCode 的分析提示词工程可借鉴立宪思想：把 JSON 契约、证据引用、拒答条件写成显式原则清单，让模型在输出前自检每个结论是否附 diff 证据，用原则约束替代逐条堆砌。",
         "related_concepts": ["alignment-rlhf-dpo-grpo", "rlaif", "prompt-engineering"],
         "interview_questions": [
             {
@@ -71,7 +71,7 @@ EXTRA_ENTRIES = [
         "category": "后训练与对齐",
         "definition": "DPO 之后兴起的不需要成对偏好数据、甚至不需要参考模型的一批轻量对齐算法：KTO 只需好坏二元标签并引入前景理论建模人类得失不对称；ORPO 把 SFT 与偏好惩罚合在一个损失里单阶段训练；SimPO 用长度归一化加间隔去掉参考模型并治好 DPO 的长度偏差。",
         "detailed_explanation": "三者各解决 DPO 的一个痛点：KTO 解决数据贵的问题，二元赞踩信号随处可得（用户点赞），用 S 型价值函数让模型对坏回答更敏感；ORPO 解决流程重的问题，交叉熵加 odds-ratio 惩罚一次前向同时学任务与偏好，省掉参考模型那份显存；SimPO 解决 DPO 刷长度的问题，用平均对数似然代替序列总分并加目标间隔，训练更快且长回复幻觉更少。代价是三者都对超参（beta、间隔）更敏感，且离线本质没变，仍不具备在线探索能力。",
-        "project_relevance": "vibe-learning 若想用线上用户对分析报告的踩赞信号持续优化提示词或微调小模型，KTO 这类只需二元反馈、无需成对标注的算法是成本最低的闭环选择，比攒偏好对现实得多。",
+        "project_relevance": "TopoCode 若想用线上用户对分析报告的踩赞信号持续优化提示词或微调小模型，KTO 这类只需二元反馈、无需成对标注的算法是成本最低的闭环选择，比攒偏好对现实得多。",
         "related_concepts": ["alignment-rlhf-dpo-grpo", "dpo-variants", "rlaif"],
         "interview_questions": [
             {
@@ -91,7 +91,7 @@ EXTRA_ENTRIES = [
         "category": "后训练与对齐",
         "definition": "把大教师模型的知识压缩进小学生模型：不只学硬标签答案，更学教师输出的软标签概率分布（暗知识），用高温 softmax 与 KL 散度让学生模仿教师的完整判断。小模型用远少于预训练的数据量，就能继承教师大部分任务能力，是端侧与低成本部署的主流前置手段。",
         "detailed_explanation": "分白盒与黑盒两派：白盒蒸馏对齐 logits、注意力或中间层特征，信息密度高但要求同词表同架构；黑盒蒸馏（序列级）只拿教师生成的优质回答做 SFT，DeepSeek-R1 蒸馏系列证明用 80 万条教师长链数据就能让 7B 小模型推理能力翻倍。工程权衡：温度越高暗知识越丰富但噪声越大；蒸馏上限锁死在教师能力之内，且教师的幻觉与偏见会被学生全盘继承，蒸馏前必须先对教师输出做质量过滤。",
-        "project_relevance": "vibe-learning 的重型分析提示词跑在云端大模型上成本高，可用大模型批量生成带证据链的分析样本，黑盒蒸馏出专用的轻量分析小模型，部署在本地做实时会话解析，兼顾延迟与成本。",
+        "project_relevance": "TopoCode 的重型分析提示词跑在云端大模型上成本高，可用大模型批量生成带证据链的分析样本，黑盒蒸馏出专用的轻量分析小模型，部署在本地做实时会话解析，兼顾延迟与成本。",
         "related_concepts": ["post-training-sft-lora", "model-quantization", "rejection-sampling"],
         "interview_questions": [
             {
@@ -111,7 +111,7 @@ EXTRA_ENTRIES = [
         "category": "模型推理与部署",
         "definition": "把模型权重与激活从 FP16/BF16 压缩到 INT8/INT4 等低比特表示，显存占用与访存开销等比下降。核心矛盾是离群值通道会被粗粒度量化抹平导致精度雪崩，因此主流方案都是“保住少数关键权重精度、压缩大多数”，在体积与智能之间做精细交换。",
         "detailed_explanation": "两条主流路线：GPTQ 用 OBS 框架逐层最小化量化前后输出误差，一次校准数小时，推理快精度稳；AWQ 发现 1% 的显著权重决定模型表现，按激活量级保护它们做逐通道缩放，免训练且保精度。工程常识：权重可压到 4bit，KV Cache 与激活通常只敢到 8bit；量化后必须用困惑度与下游任务双重验收，纯看困惑度会漏掉推理与代码能力的隐性退化；反量化开销意味着小 batch 下量化不一定更快，瓶颈在访存时才稳赚。",
-        "project_relevance": "vibe-learning 若要在用户本机旁路部署轻量分析模型，INT4 量化是刚需：7B 模型从 14GB 压到 4GB 才能塞进普通笔记本内存，且分析类任务对量化精度损失相对不敏感，性价比极高。",
+        "project_relevance": "TopoCode 若要在用户本机旁路部署轻量分析模型，INT4 量化是刚需：7B 模型从 14GB 压到 4GB 才能塞进普通笔记本内存，且分析类任务对量化精度损失相对不敏感，性价比极高。",
         "related_concepts": ["paged-attention-vllm", "knowledge-distillation", "kv-cache-acceleration"],
         "interview_questions": [
             {
@@ -131,7 +131,7 @@ EXTRA_ENTRIES = [
         "category": "模型推理与部署",
         "definition": "大模型在线 serving 的事实标准引擎。核心创新 PagedAttention 借鉴操作系统虚拟内存分页，把 KV Cache 切成定长 Block 离散存放，彻底消除显存碎片；配合连续批处理让新请求无需等待整批完成即可插队执行，同样显卡吞吐量可达原生实现的十倍以上。",
         "detailed_explanation": "传统 serving 按最大长度预分配连续显存，利用率常不足四成且长短请求互相阻塞。PagedAttention 用页表维护逻辑序列到物理 Block 的映射，请求间还能共享系统提示词前缀的物理页。连续批处理在每次迭代边界动态增删序列，以请求级调度替代批级调度。工程权衡是极致吞吐换来首字延迟抖动，且 Block 过小会放大调度开销。常见坑是前缀缓存命中率虚高评估，以及张量并行下页表同步引入的额外通信。",
-        "project_relevance": "vibe-learning 若把分析模型从云端 API 切换为本地 vLLM 服务，分页注意力加连续批处理是支撑多会话并发实时解析的关键，直接决定首字延迟与单卡并发上限两个核心体验指标。",
+        "project_relevance": "TopoCode 若把分析模型从云端 API 切换为本地 vLLM 服务，分页注意力加连续批处理是支撑多会话并发实时解析的关键，直接决定首字延迟与单卡并发上限两个核心体验指标。",
         "related_concepts": ["kv-cache-acceleration", "model-quantization", "kv-offload-inference"],
         "interview_questions": [
             {
@@ -151,7 +151,7 @@ EXTRA_ENTRIES = [
         "category": "模型推理与部署",
         "definition": "无损加速大模型逐词生成的解码算法：用轻量草稿模型一次猜出连续 K 个 token，再让大目标模型单次前向并行验证，验证通过的全部保留、第一个分歧处回退重采。数学上等价于直接从目标模型采样，输出分布零偏差，加速比取决于草稿命中率，实测常见 2 到 3 倍。",
         "detailed_explanation": "核心是验证阶段的修正采样：草稿分布与目标分布逐位比较，以截断比率概率接受，拒绝则从残差分布重采，保证边际分布严格等于目标分布。工作流程是草稿自回归猜测加目标并行验证的循环。Eagle 把草稿建模从 token 级提升到特征级，Medusa 用多解码头并行猜测，接受率更高。工程权衡是草稿越强命中越高但自身开销越大，高温采样与大 batch 下接受率暴跌甚至负优化。常见坑是只测贪心低温报喜，线上真实温度一开加速比腰斩。",
-        "project_relevance": "vibe-learning 前端靠 SSE 逐字渲染分析结论，token 间延迟直接决定打字机体验。投机采样在不换模型、不改提示词的前提下压低解码延迟，是优化流式首字与跟手度的首选无损手段。",
+        "project_relevance": "TopoCode 前端靠 SSE 逐字渲染分析结论，token 间延迟直接决定打字机体验。投机采样在不换模型、不改提示词的前提下压低解码延迟，是优化流式首字与跟手度的首选无损手段。",
         "related_concepts": ["paged-attention-vllm", "llm-sampling-hyperparameters", "model-quantization"],
         "interview_questions": [
             {
@@ -171,7 +171,7 @@ EXTRA_ENTRIES = [
         "category": "模型推理与部署",
         "definition": "用稀疏激活换取超大参数量的主流架构：模型由数十到数百个前馈专家组成，门控网络为每个 token 只挑选 top-k 个专家计算，其余专家零开销。总参数量做到稠密模型的十倍而单 token 算力基本不变，是 DeepSeek、Qwen、Mixtral 等旗舰模型的共同选择。",
         "detailed_explanation": "关键组件是门控路由、专家前馈与负载均衡损失。训练时若无约束，门控会坍缩到少数专家，传统方案加辅助损失惩罚不均衡，DeepSeek-V3 改用无辅助损失均衡加共享专家吸收公共知识。推理侧全部专家权重都要进显存，但计算稀疏，瓶颈从算力转为专家并行的卡间通信。工作流程是 token 分发到专家所在设备计算再合并。常见坑是批量推理中专家负载抖动导致慢卡拖全批，以及量化时门控精度损失引发路由漂移。",
-        "project_relevance": "vibe-learning 接入的云端分析模型多为混合专家架构，理解其路由抖动与专家并行通信开销，才能合理解释偶发延迟毛刺，并为模型超时、重试与降级策略设定符合服务特性的阈值。",
+        "project_relevance": "TopoCode 接入的云端分析模型多为混合专家架构，理解其路由抖动与专家并行通信开销，才能合理解释偶发延迟毛刺，并为模型超时、重试与降级策略设定符合服务特性的阈值。",
         "related_concepts": ["transformer-architecture", "paged-attention-vllm", "model-quantization"],
         "interview_questions": [
             {
@@ -191,7 +191,7 @@ EXTRA_ENTRIES = [
         "category": "模型推理与部署",
         "definition": "RoPE 是当今大模型的标准位置编码：把绝对位置转化为 query 与 key 向量的旋转角度，内积天然只与相对距离有关。但它只在训练长度内有效，超长推理会崩；NTK 与 YaRN 通过重调旋转频率实现免训练外推，让短窗训练的模型直接读上百 K 文本。",
         "detailed_explanation": "核心数学是对每维按不同频率旋转，低维高频刻画近邻、高维低频刻画远距。外推失效是因为超长位置落到从未见过的旋转角度区。位置插值把超长序号线性压缩回训练区间，简单但模糊近邻分辨率；NTK 按维度非均匀缩放，高频少动低频多压；YaRN 再加动态缩放与注意力温度补偿，成为免训练外推的默认方案。常见坑是只测困惑度不测长程检索，外推后模型能读长文却找不到关键句，仍需针尖评测验证。",
-        "project_relevance": "vibe-learning 处理超长 Agent 会话与大仓库全量分析时必然触及上下文上限。理解旋转位置编码外推的原理与有效边界，才能判断何时靠模型长窗硬读、何时必须走压缩与分片摘要。",
+        "project_relevance": "TopoCode 处理超长 Agent 会话与大仓库全量分析时必然触及上下文上限。理解旋转位置编码外推的原理与有效边界，才能判断何时靠模型长窗硬读、何时必须走压缩与分片摘要。",
         "related_concepts": ["transformer-architecture", "context-harness", "kv-offload-inference"],
         "interview_questions": [
             {
@@ -211,7 +211,7 @@ EXTRA_ENTRIES = [
         "category": "后训练与对齐",
         "definition": "决定模型上限的脏活累活三件套：清洗去掉乱码与低质文本，去重消除反复出现的模板内容，去污染剔除混入训练集的评测原题。工业界共识是数据质量比参数量更能拉开差距，一次彻底的去污染往往比调参一个月的收益还大。",
         "detailed_explanation": "工作流程分四层：规则层过滤乱码、超短与广告文本；模型层用小分类器打分筛高质量；去重层用 MinHash 加后缀数组做文档与段落级模糊去重；去污染层用 n-gram 重叠检测剔除评测集原文与改写版。工程权衡是清洗越狠数据越少，多样性受损会反噬泛化，需按来源配比回补。常见坑是只去训练集内部重复却不管评测泄露，榜单分数虚高，一上真实业务现形。",
-        "project_relevance": "vibe-learning 沉淀的架构知识与会话摘要若要回流为微调或蒸馏数据，同样要过清洗去重关：同一文件的重复分析、低质失败轮次必须过滤，否则会把噪声蒸馏进小模型。",
+        "project_relevance": "TopoCode 沉淀的架构知识与会话摘要若要回流为微调或蒸馏数据，同样要过清洗去重关：同一文件的重复分析、低质失败轮次必须过滤，否则会把噪声蒸馏进小模型。",
         "related_concepts": ["post-training-sft-lora", "eval-benchmarks", "knowledge-distillation"],
         "interview_questions": [
             {
@@ -231,7 +231,7 @@ EXTRA_ENTRIES = [
         "category": "后训练与对齐",
         "definition": "神经网络学新忘旧的顽疾：在新领域数据上继续训练，旧能力断崖式下跌。根因是梯度更新无差别地改写了承载旧知识的权重。对齐阶段最常见：安全微调做狠了模型变傻，领域微调做多了通用问答崩坏，持续迭代模型的团队无人能绕开这个问题。",
         "detailed_explanation": "缓解分三派：回放派在新数据中混入旧数据联合训练，简单有效但旧数据常已不可得；约束派用 EWC 等方法按 Fisher 信息锁定重要权重，新任务只能改不重要的参数；架构派用 LoRA 等增量模块隔离任务知识，原权重彻底冻结。工程权衡是保留旧能力必然挤占学新能力的容量，不存在免费午餐。常见坑是只测新任务指标宣布成功，旧能力 benchmarks 偷偷掉了十个点，要用遗忘率做强制回归门禁。",
-        "project_relevance": "vibe-learning 若对分析小模型做增量领域适配（如新增某语言支持），必须配回放与遗忘回归门禁，否则学会新语言的同时把通用代码分析能力洗掉，得不偿失。",
+        "project_relevance": "TopoCode 若对分析小模型做增量领域适配（如新增某语言支持），必须配回放与遗忘回归门禁，否则学会新语言的同时把通用代码分析能力洗掉，得不偿失。",
         "related_concepts": ["post-training-sft-lora", "alignment-tax", "knowledge-distillation"],
         "interview_questions": [
             {
@@ -251,7 +251,7 @@ EXTRA_ENTRIES = [
         "category": "后训练与对齐",
         "definition": "衡量大模型能力的考试体系：MMLU 考学科广度，GPQA 考博士级难题，针尖测试考长文检索，竞技场用真实用户投票排名。没有评测的迭代就是盲飞，但唯榜单论同样致命，因为刷榜与真实业务能力之间隔着数据污染与分布差异两道鸿沟。",
         "detailed_explanation": "评测分三层：静态客观题测知识与推理，自动化可复现但易泄露刷榜；针尖与长文任务测上下文利用，看似简单却是外推方案的照妖镜；竞技场盲测收集真实偏好，最贴近业务但成本高且可操纵。工作流程是训练中用轻量内部集高频回归，发布前跑全量公开集，重大版本加人工红队。常见坑有三：污染未披露的榜单分毫无意义；温度与采样设置不同导致跨团队分数不可比；只报平均分掩盖长尾短板。",
-        "project_relevance": "vibe-learning 评估分析模型与提示词版本时同样需要三层评测：JSON 解析率做自动化回归，金标会话的人工抽检做质量仲裁，线上踩赞信号做竞技场投票，缺一层都会误判版本优劣。",
+        "project_relevance": "TopoCode 评估分析模型与提示词版本时同样需要三层评测：JSON 解析率做自动化回归，金标会话的人工抽检做质量仲裁，线上踩赞信号做竞技场投票，缺一层都会误判版本优劣。",
         "related_concepts": ["data-curation", "rm-training", "reward-hacking"],
         "interview_questions": [
             {
@@ -271,7 +271,7 @@ EXTRA_ENTRIES = [
         "category": "后训练与对齐",
         "definition": "RLHF 的眼睛：把人类偏好压缩成一个能给任意回答打分的判别模型。训练数据是同一 prompt 下的好坏回答对，用 Bradley-Terry 模型学相对排序而非绝对分数。奖励模型的质量直接决定整个对齐的天花板，它看走眼，后面策略优化全是在错误方向上狂奔。",
         "detailed_explanation": "标准流程是采样候选对、人工或 AI 标注偏好、用 pairwise 排序损失训练、留出验证集测排序一致率。工程要点有四：每题正负配对避免模型只学题目难度；困难样本加权让模型聚焦可区分边界；标签平滑吸收标注噪声；训练多个随机种子的奖励集成压低分布外误判。常见坑是只看验证准确率，真正决定 serving 效果的是 Best-of-N 曲线：在同一题目的 N 个候选中挑出的最佳质量是否单调提升。",
-        "project_relevance": "vibe-learning 若要对候选知识条目或分析版本做自动排序，奖励模型的 pairwise 训练范式可直接复用：用人工抽检的优劣对训练轻量排序器，替代拍脑袋的启发式打分规则。",
+        "project_relevance": "TopoCode 若要对候选知识条目或分析版本做自动排序，奖励模型的 pairwise 训练范式可直接复用：用人工抽检的优劣对训练轻量排序器，替代拍脑袋的启发式打分规则。",
         "related_concepts": ["alignment-rlhf-dpo-grpo", "rlaif", "eval-benchmarks"],
         "interview_questions": [
             {
@@ -291,7 +291,7 @@ EXTRA_ENTRIES = [
         "category": "后训练与对齐",
         "definition": "最朴素有效的对齐增强闭环：让当前模型对同一问题采样几十个回答，用奖励模型或规则校验只留下最好的，再拿这些优选样本做下一轮 SFT。反复迭代，模型在自己的输出分布上不断提纯，不需要任何在线强化学习框架，数学代码场景一轮即可见效。",
         "detailed_explanation": "工作流程是采样加过滤加微调的三步循环，Best-of-N 重排与 SFT 交替。相比 PPO 系方法，实现简单、训练稳定、不需要维护价值网络；相比纯 SFT，数据分布随模型能力同步进化。理论视角是隐式做了 KL 约束下的策略改进。工程权衡是采样成本巨大，且过滤器有偏则迭代放大偏见。常见坑是温度设太低导致候选同质化，滤出的最优仍是平庸；以及多轮后多样性坍缩，模型只会一种解法，遇到分布外题目直接崩。",
-        "project_relevance": "vibe-learning 优化分析提示词时可直接套用拒绝采样：对同一会话批量生成多版分析，用确定性证据校验（diff 命中率、JSON 合法性）自动过滤，回流优质样本迭代提示词或微调小模型，零人工闭环。",
+        "project_relevance": "TopoCode 优化分析提示词时可直接套用拒绝采样：对同一会话批量生成多版分析，用确定性证据校验（diff 命中率、JSON 合法性）自动过滤，回流优质样本迭代提示词或微调小模型，零人工闭环。",
         "related_concepts": ["post-training-sft-lora", "rm-training", "knowledge-distillation"],
         "interview_questions": [
             {
@@ -311,7 +311,7 @@ EXTRA_ENTRIES = [
         "category": "模型推理与部署",
         "definition": "单卡显存装不下百万 token 的 KV Cache 时的求生术：把不常用的键值层逐出到 CPU 内存甚至硬盘，计算时再按需换回，配合稀疏注意力只加载真正被关注的块。用访存换容量，让普通显卡也能啃超长文档，只是解码速度要付出代价。",
         "detailed_explanation": "技术栈分三层：卸载层按层与按 token 把 KV 换出，预取流水线掩盖 PCIe 传输延迟；稀疏层利用注意力稀疏性，只加载高分块加固定的注意力下沉初始 token；压缩层对换出的 KV 再做量化。工作流程是预填充时分块写入加建索引，解码时查索引换入。工程权衡是延迟换长度，随机访问型任务换入频繁会慢到不可用。常见坑是只测顺序阅读报喜，针尖检索这类跳跃访问一上，缓存命中率断崖式下跌。",
-        "project_relevance": "vibe-learning 分析大仓库全量会话或超长单会话时，底层模型侧的超长推理优化决定了能否一次读完。理解卸载与稀疏的边界，才能正确设计分片摘要兜底，而不是假设模型真能无损读完百万 token。",
+        "project_relevance": "TopoCode 分析大仓库全量会话或超长单会话时，底层模型侧的超长推理优化决定了能否一次读完。理解卸载与稀疏的边界，才能正确设计分片摘要兜底，而不是假设模型真能无损读完百万 token。",
         "related_concepts": ["kv-cache-acceleration", "paged-attention-vllm", "rope-yarn"],
         "interview_questions": [
             {
@@ -331,7 +331,7 @@ EXTRA_ENTRIES = [
         "category": "后训练与对齐",
         "definition": "安全对齐的隐形账单：模型变听话的同时通用能力打折，数学代码 benchmark 掉点、创造力收敛、稍敏感就拒答。本质是安全数据把输出分布推离预训练最优点， Steuern 交多少取决于对齐数据的配比与强度，不存在零税的安全方案。",
         "detailed_explanation": "税的来源有三：安全样本挤占通用能力容量；拒答模式泛化过度，擦边正常问题也被拒；奖励模型偏爱保守圆滑回答，创造性长尾被磨平。工程治理是混合训练保住通用数据占比、用可验证任务锁住数理下限、对拒答设分级策略而非一刀切。常见坑是只验收安全指标宣布上线，通用 benchmarks 偷偷失血，等用户投诉变笨时已迭代多轮难以归因。过度拒答率要与安全通过率并列为发布门禁。",
-        "project_relevance": "vibe-learning 的分析提示词若叠加过多安全与格式约束，同样会交对齐税：模型把精力花在合规措辞上，实质分析变浅。约束条款要按需最小化，并用金标会话回归锁住分析深度下限。",
+        "project_relevance": "TopoCode 的分析提示词若叠加过多安全与格式约束，同样会交对齐税：模型把精力花在合规措辞上，实质分析变浅。约束条款要按需最小化，并用金标会话回归锁住分析深度下限。",
         "related_concepts": ["alignment-rlhf-dpo-grpo", "catastrophic-forgetting", "eval-benchmarks"],
         "interview_questions": [
             {
@@ -351,7 +351,7 @@ EXTRA_ENTRIES = [
         "category": "后训练与对齐",
         "definition": "DPO 家族的补丁史：原生 DPO 用隐式奖励做交叉熵，看似优雅却有两个暗病，一是对噪声标注过拟合到奖励崩塌，二是靠堆字数刷隐式奖励的长度偏差。IPO 加二次正则治过拟合，RPO 拉回真实奖励锚点，长度归一化一派则直接除掉字数红利，构成 DPO 之后的主流改良路线。",
         "detailed_explanation": "病理上 DPO 把偏好对的似然差推向无穷，噪声 pair 会把策略推离正常分布，IPO 用平方项让差距收敛到固定间隔而非无穷。RPO 在 DPO 损失旁并联显式奖励回归，两头下注。长度偏差一派指出序列总分天然偏爱长回答，除以长度或设间隔后偏差显著缓解。工程权衡是每个变体都引入新超参，beta 与间隔需按任务重扫。常见坑是论文默认超参照搬到自家数据，短答任务上模型被治出惜字如金的毛病。",
-        "project_relevance": "vibe-learning 若用偏好数据微调分析小模型，原生 DPO 的长度偏差会直接污染输出：模型用车轱辘话刷分，分析报告越长越空。必须选用带长度治理的变体并锁住证据密度指标。",
+        "project_relevance": "TopoCode 若用偏好数据微调分析小模型，原生 DPO 的长度偏差会直接污染输出：模型用车轱辘话刷分，分析报告越长越空。必须选用带长度治理的变体并锁住证据密度指标。",
         "related_concepts": ["alignment-rlhf-dpo-grpo", "kto-orpo-simpo", "reward-hacking"],
         "interview_questions": [
             {

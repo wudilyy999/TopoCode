@@ -12,7 +12,7 @@ EXTRA_ENTRIES = [
         "category": "Agent算法",
         "definition": "MCTS 是一种通过选择、扩展、模拟、回传四步循环，在解空间中做前瞻式规划的搜索算法。它解决 LLM 单步贪心解码短视、在数学证明与代码修复等多步任务中无法试错回退的问题，核心机制是用 UCB 公式平衡探索与利用，靠大量 rollout 估计中间状态价值。",
         "detailed_explanation": "关键组件包括选择阶段的 UCB/PUCT 策略、扩展阶段的候选动作生成、模拟阶段用 LLM 或价值模型 rollout 到终态、回传阶段更新路径节点价值。工作流程是给定当前状态反复建树，最终选访问量或均值价值最高的动作。算法权衡在于搜索宽度深度与算力开销的矛盾，分支过大时必须配合剪枝与价值网络。常见坑是 rollout 策略与真实策略分布不一致导致价值估计偏差，以及奖励稀疏时整棵树退化为随机游走。",
-        "project_relevance": "vibe-learning 分析 Agent 会话时，可借鉴 MCTS 视角评估多分支试错轨迹的质量：识别高价值决策节点、合并重复探索分支，为长会话压缩与关键路径摘要提供树形价值回传思路。",
+        "project_relevance": "TopoCode 分析 Agent 会话时，可借鉴 MCTS 视角评估多分支试错轨迹的质量：识别高价值决策节点、合并重复探索分支，为长会话压缩与关键路径摘要提供树形价值回传思路。",
         "related_concepts": ["planning-tot-got", "tree-search-verifier"],
         "interview_questions": [
             {
@@ -32,7 +32,7 @@ EXTRA_ENTRIES = [
         "category": "Agent算法",
         "definition": "PRM 是对推理链条中每一个中间步骤逐个打分的奖励模型。它解决结果奖励只能看最终对错、无法定位中间哪一步推理崩坏的问题，核心机制是训练一个判别器为每个 step 输出正确性概率，在搜索剪枝与 RL 训练中提供稠密的过程反馈信号。",
         "detailed_explanation": "关键组件包括步骤切分器、步骤级标注数据、判别式打分头。工作流程是将 CoT 按换行或语义切分为 step，模型对每个 step 输出 good/bad 概率。相比 ORM，PRM 给出稠密信号，能指导 MCTS 剪枝与 PPO 的 step 级 advantage。算法权衡是标注成本极高，且存在因果混淆：某步本身正确但前序已错时标签难以定义。常见坑是 PRM 被模型 hack，用冗长正确的废话步骤刷高分，以及跨任务泛化差，数学 PRM 迁移到代码几乎失效。",
-        "project_relevance": "vibe-learning 做 Agent 会话分析时天然需要步骤级质量判断：哪一步工具调用是有效推进、哪一步是无效重试。PRM 的步骤切分与逐段打分思想可直接用于会话轨迹的自动标注与检索排序。",
+        "project_relevance": "TopoCode 做 Agent 会话分析时天然需要步骤级质量判断：哪一步工具调用是有效推进、哪一步是无效重试。PRM 的步骤切分与逐段打分思想可直接用于会话轨迹的自动标注与检索排序。",
         "related_concepts": ["outcome-reward-model", "tree-search-verifier"],
         "interview_questions": [
             {
@@ -52,7 +52,7 @@ EXTRA_ENTRIES = [
         "category": "Agent算法",
         "definition": "ORM 是只根据最终结果对错给出整体打分的奖励模型。它解决推理过程难以逐步骤标注、但最终答案易于自动校验的场景，核心机制是把整条推理轨迹当作一个样本训练二分类器，用最终正确性作为标签，推理时用于 Best-of-N 重排序与 RL 结果奖励。",
         "detailed_explanation": "关键组件是轨迹级编码器与正确性判别头，训练数据只需问题加最终答案 pairs，成本远低于 PRM。工作流程是采样 N 条完整推理，用 ORM 打分取最高。相比 PRM 实现简单且不易被步骤级 hack，但信号稀疏，无法指出错误位置，长链条下信用分配困难。常见坑是 ORM 偏爱表面流畅但推理跳跃的答案，以及在开放式任务中最终正确性本身难以自动判定，导致标签噪声淹没训练信号。",
-        "project_relevance": "vibe-learning 的知识检索排序需要对候选条目做整体相关性打分，这正是 ORM 式轨迹级判别思想。分析会话成败时先做整体判定再下钻归因，符合本项目的分层分析架构。",
+        "project_relevance": "TopoCode 的知识检索排序需要对候选条目做整体相关性打分，这正是 ORM 式轨迹级判别思想。分析会话成败时先做整体判定再下钻归因，符合本项目的分层分析架构。",
         "related_concepts": ["process-reward-model", "best-of-n"],
         "interview_questions": [
             {
@@ -72,7 +72,7 @@ EXTRA_ENTRIES = [
         "category": "Agent算法",
         "definition": "Agentic RL 是用强化学习直接优化智能体多步行为的训练范式。它解决 SFT 只模仿示范、无法超越教师且试错能力弱的问题，核心机制是以可验证奖励为信号，让模型在数学、代码、工具调用环境中自主 rollout 探索，用 GRPO/PPO 类算法更新策略涌现长链推理。",
         "detailed_explanation": "关键组件包括可验证奖励函数、rollout 环境、策略优化器。工作流程是模型生成带工具调用的多步轨迹，环境返回结果奖励，算法计算组内相对优势并更新策略。DeepSeek-R1 范式证明规则奖励加 GRPO 即可涌现自反思行为。算法权衡是探索与稳定的矛盾：KL 约束太强则无涌现，太弱则语言崩坏。常见坑是奖励稀疏导致训练初期梯度几乎为零，以及长轨迹 credit 分配失真，需要课程学习与奖励塑形配合。",
-        "project_relevance": "vibe-learning 追踪的正是 Agent 多步会话轨迹，理解 Agentic RL 的 rollout-奖励闭环，有助于设计会话质量评估维度：多样性、工具有效率对应关键观测指标。",
+        "project_relevance": "TopoCode 追踪的正是 Agent 多步会话轨迹，理解 Agentic RL 的 rollout-奖励闭环，有助于设计会话质量评估维度：多样性、工具有效率对应关键观测指标。",
         "related_concepts": ["reward-shaping", "test-time-scaling"],
         "interview_questions": [
             {
@@ -92,7 +92,7 @@ EXTRA_ENTRIES = [
         "category": "Agent算法",
         "definition": "Self-Play 是让智能体与自身历史版本或分身对抗生成训练数据的机制。它解决对抗性与开放式任务缺少外部教师、静态数据集很快被刷满的问题，核心机制是通过与旗鼓相当的对手持续对弈，自动构造出难度自适应的课程，驱动策略与裁判能力共同进化。",
         "detailed_explanation": "关键组件包括对手池、匹配调度、胜负判定。工作流程是当前策略与历史快照对抗，胜者样本回灌训练，AlphaZero 系还用 MCTS 增强对弈质量。从单智能体视角可扩展为生成器与判别器互搏。算法权衡是对手太强导致全败无学习信号、太弱则学不到东西，需维护 ELO 分层匹配。常见坑是策略坍缩到某种专克当前对手池的奇招，换个对手即崩，以及非对称任务中攻防双方能力失衡导致一方停滞。",
-        "project_relevance": "vibe-learning 可引入自博弈思想做评估：用一个 Agent 生成会话摘要、另一个 Agent 挑刺质疑，两者对抗迭代可自动发现分析盲区，持续提升会话分析报告的质量上限。",
+        "project_relevance": "TopoCode 可引入自博弈思想做评估：用一个 Agent 生成会话摘要、另一个 Agent 挑刺质疑，两者对抗迭代可自动发现分析盲区，持续提升会话分析报告的质量上限。",
         "related_concepts": ["agentic-rl", "verifier-ensemble"],
         "interview_questions": [
             {
@@ -112,7 +112,7 @@ EXTRA_ENTRIES = [
         "category": "Agent算法",
         "definition": "记忆巩固是把 Agent 短期交互沉淀为长期可用知识、并遗忘冗余噪声的机制。它解决长会话上下文爆炸与重要事实被淹没的问题，核心机制是模仿人类记忆：按重要性、复用率与时效性给记忆打分，定期把高价值片段转写为结构化摘要，低价值片段衰减遗忘。",
         "detailed_explanation": "关键组件包括情景记忆缓冲、重要性评分器、巩固转写器、遗忘调度器。工作流程是每轮交互写入原始记忆，评分器结合检索命中率与 LLM 自评重要性打分，超过阈值的转写为事实条目或向量索引，长期未命中且低分的按艾宾浩斯曲线衰减删除。算法权衡是保留太多则检索噪声大，遗忘太激进则关键偏好丢失。常见坑是转写过程中的幻觉污染长期记忆，以及用户偏好变更后旧记忆成为顽固脏数据，需要版本与冲突消解机制。",
-        "project_relevance": "vibe-learning 的会话压缩与架构知识沉淀正是记忆巩固问题：把海量 Agent 改动事件转写为稳定的架构组件描述，丢弃中间试错噪声。巩固评分与遗忘调度可直接指导本项目的增量修订策略。",
+        "project_relevance": "TopoCode 的会话压缩与架构知识沉淀正是记忆巩固问题：把海量 Agent 改动事件转写为稳定的架构组件描述，丢弃中间试错噪声。巩固评分与遗忘调度可直接指导本项目的增量修订策略。",
         "related_concepts": ["context-harness", "context-compression-algo"],
         "interview_questions": [
             {
@@ -152,7 +152,7 @@ EXTRA_ENTRIES = [
         "category": "Agent算法",
         "definition": "Test-Time Scaling 是通过在推理阶段投入更多算力换取更高准确率的新范式。它解决单纯扩大参数规模收益递减、高质量训练数据枯竭的问题，核心机制分两轴：串行扩展拉长单条思维链深度，并行扩展采样多条候选再用 verifier 选优。",
         "detailed_explanation": "关键发现是思维链长度与准确率呈对数线性 scaling 关系，构成与训练 scaling 并列的第二定律。串行扩展靠 RL 训练出的长 CoT 实现自反思，并行扩展靠 Best-of-N 与 MCTS 搜索实现。算法权衡是串行深度带来的延迟与幻觉累积，对比并行采样的吞吐成本。常见坑是无效过度思考：简单题也被迫长思考反而引入错误，以及 verifier 天花板限制并行扩展收益，verifier 不准时采样越多错得越离谱。",
-        "project_relevance": "vibe-learning 在分析复杂 Agent 会话时面临同样的串并行权衡：是对单条长轨迹做深度下钻，还是对多文件变更做并行摘要再仲裁。理解扩展律有助于为本项目设计按任务难度自适应的分析算力分配策略。",
+        "project_relevance": "TopoCode 在分析复杂 Agent 会话时面临同样的串并行权衡：是对单条长轨迹做深度下钻，还是对多文件变更做并行摘要再仲裁。理解扩展律有助于为本项目设计按任务难度自适应的分析算力分配策略。",
         "related_concepts": ["best-of-n", "self-consistency"],
         "interview_questions": [
             {
@@ -172,7 +172,7 @@ EXTRA_ENTRIES = [
         "category": "Agent算法",
         "definition": "Best-of-N 是采样 N 个候选回答再用打分器选出最优的并行解码策略。它解决单次贪心解码方差大、好答案常与坏答案混杂的问题，核心机制是用温度采样保证多样性，再靠 ORM、verifier 或 LLM judge 做重排序，把算力花在选优而非训更大的模型上。",
         "detailed_explanation": "关键组件是多样性采样器与排序打分器。工作流程是同一 prompt 独立采样 N 条，逐条打分取 argmax。N 增大时上确界单调提升，但受 verifier 精度封顶：verifier 噪声大会出现选大翻车。算法权衡是 N 与延迟成本的线性关系，以及温度设置：太低多样性不足，太高全是垃圾候选。常见坑是长度偏差，verifier 倾向选更长的回答，需做长度归一化，以及候选间高度同质导致 N 白采，需监控 pairwise 相似度。",
-        "project_relevance": "vibe-learning 生成架构摘要与会话分析报告时，可对同一事件并行生成多版摘要再用相关性打分选优。这种采样加仲裁的模式能稳定提升报告质量，是本项目低成本提质的首选手段。",
+        "project_relevance": "TopoCode 生成架构摘要与会话分析报告时，可对同一事件并行生成多版摘要再用相关性打分选优。这种采样加仲裁的模式能稳定提升报告质量，是本项目低成本提质的首选手段。",
         "related_concepts": ["outcome-reward-model", "self-consistency"],
         "interview_questions": [
             {
@@ -192,7 +192,7 @@ EXTRA_ENTRIES = [
         "category": "Agent算法",
         "definition": "Self-Consistency 是采样多条思维链并取多数答案的解码策略。它解决单条 CoT 偶然失误率高、贪心解码押注单一路径的问题，核心机制是假设正确推理虽然路径各异但终点收敛，用边缘化近似对潜在推理路径积分，投票选出最自洽的答案。",
         "detailed_explanation": "关键组件是高温采样器与答案归一化器。工作流程是采样数十条 CoT，抽取每条最终答案做等价归一，票数最高者胜出。相比 Best-of-N 不需要训练 verifier，零成本提点显著。算法权衡是只适用于答案可精确归一的任务，开放式生成无法投票。常见坑是模型系统性偏见：所有路径犯同一个概念错误时投票反而强化错误，以及答案等价判定失败把同义答案拆票，需配语义归一化。",
-        "project_relevance": "vibe-learning 做会话事件分类与文件职责判定时，可对同一输入采样多路判定再投票，天然获得置信度估计。这种无 verifier 的集成方式适合本项目零外部依赖、轻量本地化的架构约束。",
+        "project_relevance": "TopoCode 做会话事件分类与文件职责判定时，可对同一输入采样多路判定再投票，天然获得置信度估计。这种无 verifier 的集成方式适合本项目零外部依赖、轻量本地化的架构约束。",
         "related_concepts": ["best-of-n", "verifier-ensemble"],
         "interview_questions": [
             {
@@ -212,7 +212,7 @@ EXTRA_ENTRIES = [
         "category": "Agent算法",
         "definition": "SWE-agent 是面向真实代码仓库自动修复 issue 的智能体范式。它解决传统补全只能写片段、无法在百万行仓库中定位改测闭环的问题，核心机制是给模型配备文件浏览、代码搜索、终端执行与测试运行工具，在 ReAct 循环中完成复现、定位、 patch、验证全流程。",
         "detailed_explanation": "关键组件包括仓库导航工具、复现脚本执行器、patch 生成器、回归测试守门员。工作流程是读 issue 建复现，搜索定位可疑代码，多轮编辑运行测试直至通过。相比单步生成，成败取决于工具设计与测试反馈质量。算法权衡是探索步数与成本：步数越多定位越准但 token 烧得越快。常见坑是模型为过测试而写特判式 hack，以及 issue 描述模糊时修错方向，需要测试用例充分性检查与最小 diff 约束。",
-        "project_relevance": "vibe-learning 本质上是 SWE-agent 的观察者：实时追踪这类代码修复智能体在仓库中的改动轨迹。理解其复现定位改测循环，有助于本项目准确切分会话阶段并评估每次改动的真实意图。",
+        "project_relevance": "TopoCode 本质上是 SWE-agent 的观察者：实时追踪这类代码修复智能体在仓库中的改动轨迹。理解其复现定位改测循环，有助于本项目准确切分会话阶段并评估每次改动的真实意图。",
         "related_concepts": ["agent-loop", "test-time-scaling"],
         "interview_questions": [
             {
@@ -232,7 +232,7 @@ EXTRA_ENTRIES = [
         "category": "Agent算法",
         "definition": "Search-R1 是用强化学习训练 LLM 自主调用搜索引擎做多步推理的框架。它解决静态 RAG 检索与推理割裂、模型不会按需发起多轮查询的问题，核心机制是在 RL 中把检索 token  mask 掉不计 loss，仅用最终答案正确性做奖励，让模型自发学会何时检索、如何改写查询。",
         "detailed_explanation": "关键组件包括支持特殊检索 token 的 rollout 环境、检索内容 mask 的 loss 计算、结果导向的奖励。工作流程是模型生成思考，需要时输出查询调用搜索引擎，把返回结果拼回上下文继续推理。相比 SFT 训检索行为，RL 涌现的查询策略更贴合任务。算法权衡是检索噪声会污染推理链，需要足够的 rollout 覆盖坏检索的恢复路径。常见坑是模型学会刷检索次数薅格式奖励，以及检索语料与评测集泄漏导致指标虚高。",
-        "project_relevance": "vibe-learning 的知识检索正是检索与推理交织的场景：先召回条目再组织答案。Search-R1 的检索 token 处理与查询改写思想，可指导本项目优化 BM25 召回后的重排序链路。",
+        "project_relevance": "TopoCode 的知识检索正是检索与推理交织的场景：先召回条目再组织答案。Search-R1 的检索 token 处理与查询改写思想，可指导本项目优化 BM25 召回后的重排序链路。",
         "related_concepts": ["agentic-rl", "toolformer-retrieval"],
         "interview_questions": [
             {
@@ -252,7 +252,7 @@ EXTRA_ENTRIES = [
         "category": "Agent算法",
         "definition": "Verifier Ensemble 是用多个异构验证器交叉检验候选答案再仲裁的机制。它解决单一 verifier 有偏、被 hack 后选优翻车的问题，核心机制是让规则校验、ORM、LLM judge 等正交信号各自独立打分，再按加权投票或分层否决产出最终 verdict，可靠性显著高于单裁判。",
         "detailed_explanation": "关键组件包括异构 verifier 池、分数校准层、仲裁策略。工作流程是候选答案并行过所有 verifier，校准到同一尺度后融合。规则 verifier 精确但覆盖窄，模型 verifier 覆盖广但有偏，两者正交互补。算法权衡是延迟与成本随 verifier 数量线性增长。常见坑是 verifier 间高度相关导致集成无增益，以及分数未校准直接平均让某个大尺度 verifier 独裁，需做 Platt scaling 或 rank 融合。",
-        "project_relevance": "vibe-learning 的会话分析结论天然需要多信号交叉：BM25 相关性、规则启发、LLM 研判三路互相印证。这种异构仲裁思想是本项目检索排序与分析结论置信度设计的直接依据。",
+        "project_relevance": "TopoCode 的会话分析结论天然需要多信号交叉：BM25 相关性、规则启发、LLM 研判三路互相印证。这种异构仲裁思想是本项目检索排序与分析结论置信度设计的直接依据。",
         "related_concepts": ["outcome-reward-model", "best-of-n"],
         "interview_questions": [
             {
@@ -272,7 +272,7 @@ EXTRA_ENTRIES = [
         "category": "Agent算法",
         "definition": "树搜索与验证器协同解码是用 verifier 分数实时引导搜索树扩展与剪枝的解码范式。它解决纯采样选优浪费算力、盲目搜索指数爆炸的问题，核心机制是把 PRM/ORM 当作树节点的价值函数，每轮只保留高分分支继续展开，实现边搜边验的计算最优分配。",
         "detailed_explanation": "关键组件包括候选扩展器、节点价值 verifier、剪枝调度器。工作流程是 beam 或 MCTS 展开一层，verifier 批量打分，淘汰低分节点后继续。相比事后 Best-of-N，算力集中在有希望的分支，同样预算下覆盖更深。算法权衡是 verifier 调用频率：每步都验最准但最贵，可隔步验证。常见坑是 verifier 早期误杀：好路径的中间态分数低被提前剪掉，需保留一定探索配额或用 UCB 风格的乐观估计。",
-        "project_relevance": "vibe-learning 分析长 Agent 会话时同样面临分支爆炸：多文件改动、多轮重试构成搜索树。用轻量打分做节点剪枝、只对高价值分支深度下钻，正是本项目有界快照与增量分析的工程映射。",
+        "project_relevance": "TopoCode 分析长 Agent 会话时同样面临分支爆炸：多文件改动、多轮重试构成搜索树。用轻量打分做节点剪枝、只对高价值分支深度下钻，正是本项目有界快照与增量分析的工程映射。",
         "related_concepts": ["mcts-agent", "process-reward-model"],
         "interview_questions": [
             {
@@ -292,7 +292,7 @@ EXTRA_ENTRIES = [
         "category": "Agent算法",
         "definition": "奖励塑形是给稀疏的终局奖励补充中间过程小奖励以加速学习的技术。它解决 Agent 长轨迹中只有成功或失败二值信号、初期几乎拿不到正反馈的问题，核心机制是基于势能函数设计附加奖励，在不改变最优策略的前提下把大目标拆成可感知的阶段性进展信号。",
         "detailed_explanation": "关键理论是 Ng 的势能塑形：附加奖励写成折扣势差形式时最优策略不变。实践组件包括子目标里程碑、格式与长度约束、工具调用有效性奖励。工作流程是主奖励保持真实目标，shaping 项只给方向性提示。算法权衡是 shaping 太强会扭曲目标，模型刷中间分放弃终局。常见坑是各 shaping 系数拍脑袋，互相打架导致训练震荡，必须做消融确认每项的边际贡献。",
-        "project_relevance": "vibe-learning 评估 Agent 会话质量时同样不能只看终局成败：工具调用成功率、重试收敛速度、阶段里程碑达成度都是天然 shaping 信号，可直接复用为会话健康度指标体系。",
+        "project_relevance": "TopoCode 评估 Agent 会话质量时同样不能只看终局成败：工具调用成功率、重试收敛速度、阶段里程碑达成度都是天然 shaping 信号，可直接复用为会话健康度指标体系。",
         "related_concepts": ["agentic-rl", "curriculum-learning-agent"],
         "interview_questions": [
             {
@@ -312,7 +312,7 @@ EXTRA_ENTRIES = [
         "category": "Agent算法",
         "definition": "课程学习是按由易到难的顺序组织训练样本的策略。它解决 Agent 任务难度跨度大、直接上难题导致全零奖励学不动的问题，核心机制是先让模型在简单任务上建立基础行为模式与正反馈，再逐步放开任务复杂度，使能力边界随课程平滑外扩。",
         "detailed_explanation": "关键组件包括难度度量器、课程调度器、能力门槛。工作流程是用通过率、推理长度或人工分级给样本定级，模型在当前级别达标后再解锁下一级。人工课程稳定但需先验，自适应课程按实时成功率动态调参。算法权衡是课程太保守浪费算力，太激进退回全零奖励。常见坑是灾难性遗忘：学难题时把简单能力丢了，需混合回放旧课程样本保持。",
-        "project_relevance": "vibe-learning 做仓库全量分析时可借鉴课程思想：先分析核心入口文件建立骨架，再逐步下钻边缘模块。这种由主干到枝叶的渐进式分析能保证中断时已有可用结果，契合增量修订架构。",
+        "project_relevance": "TopoCode 做仓库全量分析时可借鉴课程思想：先分析核心入口文件建立骨架，再逐步下钻边缘模块。这种由主干到枝叶的渐进式分析能保证中断时已有可用结果，契合增量修订架构。",
         "related_concepts": ["agentic-rl", "reward-shaping"],
         "interview_questions": [
             {
@@ -332,7 +332,7 @@ EXTRA_ENTRIES = [
         "category": "Agent算法",
         "definition": "层次化规划是把复杂任务逐层分解为可执行子任务的规划方法。它解决长程任务单次规划视野不足、扁平 ReAct 易跑偏的问题，核心机制是高层 planner 只定里程碑与依赖顺序，底层 executor 专注单步执行，遇阻时向上传递重规划，形成分层闭环。",
         "detailed_explanation": "关键组件包括任务分解器、依赖图、子任务执行器、重规划触发器。HTN  classical 做法用方法库逐层展开，现代 LLM 做法是 planner 动态生成子目标。工作流程是顶层拆 milestone，每个 milestone 再拆工具级动作，底层失败可局部重试或上报重规划。算法权衡是层级越深全局越稳但通信开销与延迟越大。常见坑是分解粒度失衡：太粗底层不会做，太细高层 context 被子细节淹没，以及跨层目标漂移。",
-        "project_relevance": "vibe-learning 的架构分析天然分层：项目级概览、组件级职责、文件级符号。下钻与上卷的层次化组织正是 HTN 思想的映射，分层摘要也让长会话压缩与检索都获得清晰的粒度抓手。",
+        "project_relevance": "TopoCode 的架构分析天然分层：项目级概览、组件级职责、文件级符号。下钻与上卷的层次化组织正是 HTN 思想的映射，分层摘要也让长会话压缩与检索都获得清晰的粒度抓手。",
         "related_concepts": ["agent-loop", "planning-tot-got"],
         "interview_questions": [
             {

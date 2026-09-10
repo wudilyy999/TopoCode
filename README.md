@@ -1,4 +1,4 @@
-# vibe-learning
+# TopoCode
 
 <p align="center">
   <h2 align="center">Let agents build. Understand what they build. Learn as you go.</h2>
@@ -13,7 +13,7 @@
     <a href="#roadmap"><img src="https://img.shields.io/badge/Status-Active%20Development-brightgreen" alt="Status"></a>
   </p>
   <p align="center">
-    <a href="#why-vibe-learning">Why vibe-learning?</a> •
+    <a href="#why-TopoCode">Why TopoCode?</a> •
     <a href="#demo">Demo</a> •
     <a href="#key-features">Key Features</a> •
     <a href="#quick-start">Quick Start</a> •
@@ -26,7 +26,7 @@
 
 ---
 
-## Why vibe-learning?
+## Why TopoCode?
 
 Autonomous coding agents (Claude Code, OpenAI Codex, Kimi Code, etc.) can generate, refactor, and modify dozens of files across a large codebase in minutes. While development velocity accelerates, **human project comprehension drops rapidly**:
 
@@ -35,9 +35,9 @@ Autonomous coding agents (Claude Code, OpenAI Codex, Kimi Code, etc.) can genera
 - **Architectural Drift**: *How do these automated changes impact system boundaries and imports?*
 - **Learning Debt**: *How can engineers truly master the codebase instead of blindly rubber-stamping agent PRs?*
 
-**vibe-learning is an independent out-of-band observer and learning companion.** It runs purely on local loopback, non-intrusively monitors agent sessions and filesystem diffs, and continuously translates raw agent activity into an interactive architectural blueprint, an evidence-grounded change timeline, and contextual engineering knowledge.
+**TopoCode is an independent out-of-band observer and learning companion.** It runs purely on local loopback, non-intrusively monitors agent sessions and filesystem diffs, and continuously translates raw agent activity into an interactive architectural blueprint, an evidence-grounded change timeline, and contextual engineering knowledge.
 
-> **Core Philosophy**: Your coding agent builds the code. vibe-learning ensures you understand, verify, and master what is being built.
+> **Core Philosophy**: Your coding agent builds the code. TopoCode ensures you understand, verify, and master what is being built.
 
 ---
 
@@ -49,7 +49,7 @@ Autonomous coding agents (Claude Code, OpenAI Codex, Kimi Code, etc.) can genera
 *Track real-time code modifications alongside high-level system architecture. Jump seamlessly from change events into deep file analysis.*
 
 <p align="center">
-  <img src="docs/images/architecture-timeline.png" width="40%" alt="vibe-learning architecture beside the agent change timeline" />
+  <img src="docs/images/architecture-timeline.png" width="40%" alt="TopoCode architecture beside the agent change timeline" />
 </p>
 
 ### 2. File Guide: Entry Points, Symbols & Code Blocks
@@ -113,8 +113,8 @@ Autonomous coding agents (Claude Code, OpenAI Codex, Kimi Code, etc.) can genera
 
 ### 1. Clone & Start
 ```bash
-git clone https://github.com/wudilyy999/vibe-learning.git
-cd vibe-learning
+git clone https://github.com/wudilyy999/TopoCode.git
+cd TopoCode
 
 # Launch observer for your target project directory
 python3 server.py --project /path/to/your/local/repo --port 8765
@@ -153,7 +153,7 @@ Use the **Discovery Center (嗅探中心)** in the top bar to inspect subdirecto
 
 1. **Passive Log Tailing**: Periodically reads append-only session JSONL files from supported agent directories.
 2. **Deterministic Round Chunking**: Segments interaction streams into distinct user rounds, verifying file changes with filesystem snapshots.
-3. **Local Event Persistence**: Writes events to `~/.vibe-learning/` with file locks and idempotent `(session_id, turn_id)` deduplication.
+3. **Local Event Persistence**: Writes events to `~/.TopoCode/` with file locks and idempotent `(session_id, turn_id)` deduplication.
 4. **Asynchronous Enrichment**: If configured, dispatches sanitized metadata to an OpenAI-compatible endpoint to enrich events with technical summaries.
 
 ---
@@ -171,12 +171,12 @@ Use the **Discovery Center (嗅探中心)** in the top bar to inspect subdirecto
 
 ## Privacy & Safety
 
-vibe-learning is engineered from the ground up for strict local observation:
+TopoCode is engineered from the ground up for strict local observation:
 
 - **127.0.0.1 Loopback Only**: The HTTP server binds exclusively to localhost. It cannot be reached from external networks.
-- **Read-Only Observer**: vibe-learning **never** writes to your watched repositories or agent home directories.
-- **Isolated Storage**: All internal states (events, architecture cache, offsets) live strictly under `~/.vibe-learning/` (customizable via `VIBE_LEARNING_DATA`).
-- **Source Code Stays Local**: When configuring an external analysis LLM, vibe-learning **never** sends full source code or git diffs. Only redacted turn summaries and file metadata (file path, line count, language) are transmitted.
+- **Read-Only Observer**: TopoCode **never** writes to your watched repositories or agent home directories.
+- **Isolated Storage**: All internal states (events, architecture cache, offsets) live strictly under `~/.TopoCode/` (customizable via `TOPOCODE_DATA`).
+- **Source Code Stays Local**: When configuring an external analysis LLM, TopoCode **never** sends full source code or git diffs. Only redacted turn summaries and file metadata (file path, line count, language) are transmitted.
 - **Automatic Credential Redaction**: All tokens, API keys, passwords, bearer headers, and secrets matching standard credential patterns are automatically replaced with `[credential omitted]`.
 - **Zero Heavy Dependencies**: Built entirely with standard library modules (`http.server`, `urllib`, `sqlite3`/`json`, `ast`), eliminating supply-chain attack vectors.
 
@@ -184,7 +184,7 @@ vibe-learning is engineered from the ground up for strict local observation:
 
 ## Optional Model Configuration
 
-vibe-learning functions completely out of the box without any LLM configured (`evidence_only` mode), providing full architectural maps, file trees, symbol breakdowns, and change timelines.
+TopoCode functions completely out of the box without any LLM configured (`evidence_only` mode), providing full architectural maps, file trees, symbol breakdowns, and change timelines.
 
 To enable semantic summaries, architectural inferences, and the interactive Q&A engine:
 1. Click **Model Settings (模型配置)** in the top navigation bar.
@@ -199,7 +199,7 @@ To enable semantic summaries, architectural inferences, and the interactive Q&A 
 ## Repository Structure
 
 ```text
-vibe-learning/
+TopoCode/
 ├── server.py              # Single-process HTTP server, REST API, SSE streaming & worker queues
 ├── snapshot/              # Bounded project snapshots, AST symbol inspection, language detection
 ├── platforms/             # Pluggable agent adapters (Claude Code, Codex, Kimi, stubs)

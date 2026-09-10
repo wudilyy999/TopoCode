@@ -26,7 +26,7 @@ from agent.prompts import (
 
 # Standard agent client headers to prevent upstream proxy/WAF blocks (e.g. 502 on Python-urllib)
 DEFAULT_HEADERS = {
-    "User-Agent": "vibe-learning/1.0 (Macintosh; Apple Silicon)",
+    "User-Agent": "TopoCode/1.0 (Macintosh; Apple Silicon)",
     "Accept": "application/json, */*",
     "Content-Type": "application/json",
 }
@@ -69,7 +69,7 @@ class ProjectAnalysisAgent:
         data = json.dumps(body).encode("utf-8")
         headers = dict(DEFAULT_HEADERS)
         import hashlib
-        headers['x-opencode-session'] = 'vibe-learning-' + hashlib.blake2b(
+        headers['x-opencode-session'] = 'topocode-' + hashlib.blake2b(
             json.dumps(body['messages'][:1], ensure_ascii=False, sort_keys=True).encode(),
             digest_size=20,
         ).hexdigest()

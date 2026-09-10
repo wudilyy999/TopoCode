@@ -26,6 +26,7 @@ INTERNAL_EXCLUDED_PREFIXES = (
     os.path.abspath(os.path.expanduser("~/.kimi-code")),
     os.path.abspath(os.path.expanduser("~/.claude")),
     os.path.abspath(os.path.expanduser("~/.codex")),
+    os.path.abspath(os.path.expanduser("~/.topocode")),
     os.path.abspath(os.path.expanduser("~/.vibe-learning")),
     os.path.abspath(os.path.expanduser("~/.grok")),
     "/private/var",

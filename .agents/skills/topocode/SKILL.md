@@ -1,9 +1,9 @@
 ---
-name: vibe-learning
-description: vibe-learning 仓库的框架设计规范速查与架构处理守则。当在 vibe-learning 仓库内开发、修改架构、新增平台适配器/知识词条/分析能力，或需要理解事件流、图谱构建、memory 压缩机制时使用。确保换了 AI 也能正确处理架构信息。
+name: TopoCode
+description: TopoCode 仓库的框架设计规范速查与架构处理守则。当在 TopoCode 仓库内开发、修改架构、新增平台适配器/知识词条/分析能力，或需要理解事件流、图谱构建、memory 压缩机制时使用。确保换了 AI 也能正确处理架构信息。
 ---
 
-在 vibe-learning 仓库工作时，先读 `docs/ARCHITECTURE.md`（权威规范）与仓库根 `AGENTS.md`。本 skill 是防跑偏速查层。
+在 TopoCode 仓库工作时，先读 `docs/ARCHITECTURE.md`（权威规范）与仓库根 `AGENTS.md`。本 skill 是防跑偏速查层。
 
 ## 一句话架构
 
@@ -11,7 +11,7 @@ description: vibe-learning 仓库的框架设计规范速查与架构处理守�
 
 ## 处理架构信息时的铁律
 
-1. **纯观察者**：不写被观察项目、不写 agent 家目录、状态只落 `~/.vibe-learning/`、只绑 127.0.0.1。
+1. **纯观察者**：不写被观察项目、不写 agent 家目录、状态只落 `~/.TopoCode/`、只绑 127.0.0.1。
 2. **零重依赖**：后端只用 Python 标准库；前端只有 `web/index.html`。禁止引入框架。
 3. **脱敏出域**：模型只拿到脱敏摘要+文件元数据；绝不输出源码正文、diff、凭据。
 4. **优雅降级**：模型未配置或调用失败 → `analysis_status = evidence_only`，照常展示，绝不抛异常穿透。
@@ -28,7 +28,7 @@ description: vibe-learning 仓库的框架设计规范速查与架构处理守�
 | 历史上下文拼接 | 必须走 `SessionMemory.build_context_summary(token_budget=...)`（自动阶梯压缩，见 `agent/memory.py`） |
 | 前端交互/文案 | `web/index.html`；中英双语文案都加进 `I18N` 字典 |
 
-## 关键存储（~/.vibe-learning/）
+## 关键存储（~/.TopoCode/）
 
 `config.json`（项目/模型/忽略名单）、`events-<slug>.jsonl`（事件流）、
 `knowledge/arch-<slug>.json`（架构知识 architecture.v2）、`memory/user-<slug>.json`（用户画像，UI 不展示）、`offsets.json`（轮询偏移）。

@@ -11,7 +11,7 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "Function Calling是大模型把自然语言意图映射为结构化函数调用的机制：模型按JSON Schema声明的参数规范输出函数名与实参，由宿主程序真实执行再把结果回填上下文。它解决了LLM只能动嘴不能动手的问题，是Tool Use的前身，也是ReAct循环落地的工程契约核心。",
         "detailed_explanation": "关键组件有四块：工具声明层（name、description、parameters三元组）、解码约束层（把输出限制在合法函数签名空间）、宿主执行器（鉴权、超时、重试、幂等）、结果回填层（tool result作为新Observation）。典型流程是模型输出tool_call、宿主执行、结果拼回消息继续生成。工程权衡在于Schema粒度：描述越细命中率越高但越耗token；并行调用提速却放大副作用风险。常见坑有幻觉参数名、枚举外取值、数字类型漂移，必须在执行前做Schema二次校验。",
-        "project_relevance": "vibe-learning监听会话tool_use块还原调用参数与耗时，SSE推送工具事件，图谱关联工具与文件定位高频风险。",
+        "project_relevance": "TopoCode监听会话tool_use块还原调用参数与耗时，SSE推送工具事件，图谱关联工具与文件定位高频风险。",
         "related_concepts": ["tool-use-engineering", "structured-output", "mcp-protocol", "react-pattern"],
         "interview_questions": [
             {
@@ -31,7 +31,7 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "Agent工具工程是把外部能力封装成模型可理解、可调用、可治理的工具集合的实践：每个工具用自然语言描述加JSON Schema定义用途与参数，配鉴权、超时、幂等与可观测性。它解决的是工具多了模型选不对、调用不稳、副作用不可控三大问题，是Function Calling之上的系统工程。",
         "detailed_explanation": "核心组件包括工具注册表（统一命名、版本、owner）、Schema设计（动词命名、参数正交、示例驱动）、执行运行时（沙箱隔离、并发配额、熔断降级）、反馈通道（结构化错误信息供模型自纠）。工作流程是检索候选工具、装配最小工具集进上下文、模型决策调用、执行回填。工程权衡在于工具粒度：大工具省步数但参数复杂易错，小工具精准但轨迹变长；工具数量超过阈值必须做检索预选。常见坑是描述含糊导致误选、副作用工具缺确认、错误信息过于技术化模型看不懂。",
-        "project_relevance": "vibe-learning是外挂式工具观测系统：监听Agent工具调用序列，快照校验副作用真实落盘，图谱沉淀高频工具治理证据。",
+        "project_relevance": "TopoCode是外挂式工具观测系统：监听Agent工具调用序列，快照校验副作用真实落盘，图谱沉淀高频工具治理证据。",
         "related_concepts": ["function-calling", "mcp-protocol", "agent-skills", "hooks-lifecycle"],
         "interview_questions": [
             {
@@ -51,7 +51,7 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "Agent记忆系统是让智能体跨越单次上下文窗口记住信息的基础设施：短期记忆即当前会话上下文窗口，长期记忆是跨会话持久化的事实与偏好，情景记忆存储历史轨迹的经验教训。它解决长任务遗忘用户约束、重复踩坑、无法沉淀经验的问题，是长程Agent从能用到好用的分水岭。",
         "detailed_explanation": "典型分三层：工作记忆（当前prompt内的对话与scratchpad，容量受窗口限制）、情景记忆（历史任务轨迹摘要与反思结论，检索复用）、语义记忆（用户画像、项目事实、领域知识的结构化沉淀）。写入路径靠后台异步摘要压缩避免阻塞主循环，读取路径靠向量加关键词混合检索按需注入。工程权衡是记忆越多幻觉与污染风险越大，需设可信度与过期机制。常见坑是把原始长文无脑存入导致检索噪声、记忆冲突无仲裁、多用户记忆串扰。",
-        "project_relevance": "vibe-learning的会话监听天然是记忆素材采集器：把Agent会话轨迹沉淀为可检索的经验事件，项目快照提供记忆落盘的真实性校验，知识图谱则是长期记忆的一种图式组织形态，三者共同构成记忆可观测底座。",
+        "project_relevance": "TopoCode的会话监听天然是记忆素材采集器：把Agent会话轨迹沉淀为可检索的经验事件，项目快照提供记忆落盘的真实性校验，知识图谱则是长期记忆的一种图式组织形态，三者共同构成记忆可观测底座。",
         "related_concepts": ["scratchpad-context", "agentic-rag", "context-harness", "agent-observability"],
         "interview_questions": [
             {
@@ -71,7 +71,7 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "Agent可观测性是用追踪、指标、日志三件套还原智能体每一步决策与调用链路的能力：每个LLM调用、工具执行、检索动作都记为span并串成trace。它解决Agent黑盒难调试、坏一次不知哪一步坏、成本与延迟无账可查的问题，是Agent从demo走向生产运维的门票。",
         "detailed_explanation": "关键组件是追踪（trace串起Thought、Action、Observation全链）、指标（步数、token、延迟、工具成功率聚合）、日志与录制（完整prompt与回填结果留档复盘）。基于OpenTelemetry语义约定，各span带trace_id父子关联，可跨LLM网关与工具服务透传。工程权衡是全量录制成本高昂，需采样加敏感字段脱敏。常见坑是只记token账不记决策因果、异步工具调用链断裂、把用户隐私原文写进span明文。",
-        "project_relevance": "vibe-learning是外挂可观测性实现：监听对应日志采集，快照提供外部证据链，SSE推送实时trace流，图谱聚合成架构视图。",
+        "project_relevance": "TopoCode是外挂可观测性实现：监听对应日志采集，快照提供外部证据链，SSE推送实时trace流，图谱聚合成架构视图。",
         "related_concepts": ["agent-evaluation", "agent-loop", "hooks-lifecycle", "polling-long-polling"],
         "interview_questions": [
             {
@@ -91,12 +91,12 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "Agent评测体系是用基准与指标度量智能体真实任务能力的方法集合：SWE-bench考仓库级代码修复，GAIA考开放世界工具协同，轨迹级评估看中间步骤质量而非只看结果。它解决唯结果论掩盖作弊与低效、离线分数与线上体感脱节的问题，是Agent迭代的方向盘。",
         "detailed_explanation": "三层结构：任务基准（SWE-bench用真实GitHub issue加单测判定，GAIA用需浏览检索的多步问答）、过程评估（步数效率、工具成功率、是否走捷径作弊）、线上回放（影子流量对比）。SWE-bench Verified经人工清洗去 flaky 用例，GAIA分级难度考通用助手能力。工程权衡是自动化判定便宜但易被hack，人工与LLM-as-judge贵且有偏。常见坑是测试集泄漏进训练、Agent记住答案而非学会方法、只报通过率不报成本延迟。",
-        "project_relevance": "vibe-learning沉淀的真实会话轨迹正是评测语料金矿：监听记录失败现场供复盘，快照diff可作为任务完成度的客观判定信号，SSE回放能力支撑评测过程可视化，知识图谱沉淀高频失败模式反哺评测集建设。",
+        "project_relevance": "TopoCode沉淀的真实会话轨迹正是评测语料金矿：监听记录失败现场供复盘，快照diff可作为任务完成度的客观判定信号，SSE回放能力支撑评测过程可视化，知识图谱沉淀高频失败模式反哺评测集建设。",
         "related_concepts": ["agent-observability", "agentic-rag", "sandbox-execution", "planning-tot-got"],
         "interview_questions": [
             {
                 "question": "【阿里】Agent在SWE-bench上分数很高，线上修bug却频繁翻车，离线评测与线上效果脱节的根因一般在哪？怎么弥合？",
-                "answer": "1. 基准分布偏差：SWE-bench是 curated 的知名仓库issue，与线上私有仓库的构建复杂度、测试完备度差异大，需建自有仓库的内评集。\n2. 判定口径差异：离线只看单测通过，线上还要看改动面、回归风险与可读性，应引入diff规模与回归测试通过率做联合指标。\n3. 闭环回放：把线上失败case脱敏沉淀为回归评测集，每次发版先跑内评集，用vibe-learning这类轨迹记录做失败归因再补数据。"
+                "answer": "1. 基准分布偏差：SWE-bench是 curated 的知名仓库issue，与线上私有仓库的构建复杂度、测试完备度差异大，需建自有仓库的内评集。\n2. 判定口径差异：离线只看单测通过，线上还要看改动面、回归风险与可读性，应引入diff规模与回归测试通过率做联合指标。\n3. 闭环回放：把线上失败case脱敏沉淀为回归评测集，每次发版先跑内评集，用TopoCode这类轨迹记录做失败归因再补数据。"
             },
             {
                 "question": "【腾讯】只看最终任务成败会漏掉Agent走捷径（如硬编码答案绕过测试），轨迹级评估要查哪些信号？",
@@ -111,7 +111,7 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "Guardrails是包在模型输入输出与工具调用链路上的策略 enforcement 层：输入侧拦截注入与敏感请求，输出侧审核有害内容与格式合规，动作侧按风险分级放行或拦截。它解决模型能力越强破坏力越大、单靠提示词约束不可靠的问题，是Agent上线的合规底线。",
         "detailed_explanation": "三道闸：输入护栏（意图分类、注入检测、PII识别）、输出护栏（毒性分类器、正则规则、Schema校验）、动作护栏（工具风险分级、高危操作审批）。实现上分确定性规则（快、准、零幻觉）与模型裁判（覆盖长尾语义）两层串联。工程权衡是误杀与漏放的跷跷板，金融医疗等场景宁可误杀。常见坑是只防输出不防工具链、护栏本身被提示词绕过、多语言下分类器水土不服。",
-        "project_relevance": "vibe-learning以外挂视角补强护栏审计：会话监听记录每次护栏触发的上下文，快照验证被拦截的工具是否真的没落盘，SSE实时告警高危拦截事件，知识图谱统计哪类任务触发护栏最多以指导策略调优。",
+        "project_relevance": "TopoCode以外挂视角补强护栏审计：会话监听记录每次护栏触发的上下文，快照验证被拦截的工具是否真的没落盘，SSE实时告警高危拦截事件，知识图谱统计哪类任务触发护栏最多以指导策略调优。",
         "related_concepts": ["prompt-injection-defense", "human-in-the-loop", "structured-output", "sandbox-execution"],
         "interview_questions": [
             {
@@ -131,7 +131,7 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "结构化输出是强制模型输出符合预定Schema的JSON等格式的技术：轻量做法是提示词加JSON Mode，硬核做法是约束解码在logits层屏蔽非法token。它解决模型输出格式漂移、下游解析靠正则脆弱不堪的问题，是Agent与工程系统对接的接口契约。",
         "detailed_explanation": "两条路线：JSON Mode靠后训练让模型自觉输出合法JSON，便宜但无硬保证；约束解码（grammar-based sampling）在解码时按Schema自动机过滤词表，非法token概率直接置零，保证100%合规但增加推理开销。工程上常组合：约束解码保格式、宿主校验保语义。权衡是Schema越复杂解码越慢，超大枚举会显著拖慢首token。常见坑是Schema与提示词描述打架、嵌套过深模型填错层级、流式输出时半截JSON被下游提前消费。",
-        "project_relevance": "vibe-learning解析会话JSONL依赖稳定Schema抽取调用记录，对外事件流与图谱接口同样严格约束防渲染白屏。",
+        "project_relevance": "TopoCode解析会话JSONL依赖稳定Schema抽取调用记录，对外事件流与图谱接口同样严格约束防渲染白屏。",
         "related_concepts": ["function-calling", "guardrails", "tool-use-engineering", "jsonl-format"],
         "interview_questions": [
             {
@@ -151,7 +151,7 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "代码沙箱是让Agent生成的代码在隔离环境中安全试错的执行底座：通过容器、微虚拟机或syscall过滤限制文件、网络与资源访问，跑挂了只影响沙箱不伤宿主。它解决Agent必须动手验证、但直接在本机执行等同于交出root权限的矛盾，是代码智能体的安全基座。",
         "detailed_explanation": "隔离分三级：进程级（seccomp、namespace，轻但隔离弱）、容器级（Docker、gVisor，用户态内核拦截syscall，平衡之选）、微VM级（Firecracker，毫秒级启动接近硬件隔离）。配套资源配额（CPU、内存、磁盘、超时）、网络策略（默认断网或白名单代理）、产物回收（只回传stdout与指定文件）。工程权衡是隔离强度与启动速度、镜像体积的三角。常见坑是沙箱内缺依赖导致误判代码错误、超时一刀切杀掉长编译、挂载目录越权逃逸。",
-        "project_relevance": "vibe-learning以外挂只读方式观测Agent：不侵入进程、只监听会话与快照，既拿执行证据又不扩大攻击面，与沙箱思想同源互补。",
+        "project_relevance": "TopoCode以外挂只读方式观测Agent：不侵入进程、只监听会话与快照，既拿执行证据又不扩大攻击面，与沙箱思想同源互补。",
         "related_concepts": ["human-in-the-loop", "guardrails", "agent-evaluation", "docker-container"],
         "interview_questions": [
             {
@@ -171,7 +171,7 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "HITL是在Agent自主链路中按风险插入人工决策点的机制：低风险步骤自动放行，高风险动作暂停并携带完整上下文等待人批准、驳回或改参后放行。它解决全自主不可信、全人工没效率的两难，是高风险Agent上线的标准安全带。",
         "detailed_explanation": "核心是三件套：风险分级器（按工具类型、参数金额、影响面定级）、中断挂起机制（checkpoint冻结轨迹状态，人批后可恢复）、上下文打包（给审批人看 diff、影响面、回滚预案而非原始prompt）。流程上支持批准、驳回、改参放行、升级转交四种处置。工程权衡是审批粒度：太细把人淹没在弹窗里导致乱点通过，太粗漏掉关键风险。常见坑是审批上下文不足人只能盲批、超时无默认策略、审批记录缺审计链。",
-        "project_relevance": "vibe-learning事件流是审批台弹药：会话还原决策链，快照diff展示影响面，图谱提示历史风险，一次推送即审计上下文。",
+        "project_relevance": "TopoCode事件流是审批台弹药：会话还原决策链，快照diff展示影响面，图谱提示历史风险，一次推送即审计上下文。",
         "related_concepts": ["guardrails", "sandbox-execution", "tool-use-engineering", "agent-observability"],
         "interview_questions": [
             {
@@ -191,7 +191,7 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "A2A是Google于2025年4月发布并捐给Linux基金会的智能体互操作协议：Agent用标准Agent Card声明能力，经HTTP加JSON-RPC互发消息委托任务。它解决各家Agent语言不通、能力发现靠硬编码的问题，与MCP构成调用加协作的互补双协议。",
         "detailed_explanation": "核心机制有三：Agent Card（well-known地址上的JSON能力描述，含技能、端点、鉴权方式）、消息与任务模型（Message含多Part内容块，Task跟踪异步长任务状态）、安全传输（TLS加认证token，Agent可代表用户跨组织协作）。与MCP分工明确：MCP管Agent到工具，A2A管Agent到Agent。工程权衡是标准化带来互操作但增加协议适配与版本治理成本。常见坑是Card描述夸大导致任务错配、跨组织鉴权链过长、长任务状态同步不一致。",
-        "project_relevance": "vibe-learning多平台监听适配A2A协作：把分散各家的会话事件与快照diff拼成跨Agent证据链，SSE统一推送，图谱沉淀协作拓扑。",
+        "project_relevance": "TopoCode多平台监听适配A2A协作：把分散各家的会话事件与快照diff拼成跨Agent证据链，SSE统一推送，图谱沉淀协作拓扑。",
         "related_concepts": ["mcp-protocol", "multi-agent-system", "guardrails", "agent-observability"],
         "interview_questions": [
             {
@@ -211,7 +211,7 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "Agent Skills是把某类专职能力打包成可插拔目录的封装规范：一个skill含说明文档、脚本工具与资源文件，Agent按需加载而非常驻上下文。它解决提示词无限膨胀、能力复用靠复制粘贴的问题，让沉淀下来的专家经验变成可分发、可版本化的能力资产。",
         "detailed_explanation": "标准结构是元信息（名称、版本、触发条件描述）加内容体（操作手册SOP、可用脚本、示例）。运行时靠触发描述做路由：意图匹配才加载，正文渐进展开避免一次吞完。工作流是发现、加载、执行、反馈沉淀四步。工程权衡是skill粒度：太粗加载浪费token，太细路由失败率高。常见坑是触发描述写得像广告导致误触发、skill内脚本与声明行为不一致、版本升级破坏存量任务。",
-        "project_relevance": "vibe-learning观测的高频优质行为是skill原材料：监听挖掘操作套路，快照验证真实有效，图谱关联适用目录反哺技能库。",
+        "project_relevance": "TopoCode观测的高频优质行为是skill原材料：监听挖掘操作套路，快照验证真实有效，图谱关联适用目录反哺技能库。",
         "related_concepts": ["tool-use-engineering", "mcp-protocol", "prompt-engineering", "agent-memory-system"],
         "interview_questions": [
             {
@@ -231,7 +231,7 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "Hook是挂在Agent生命周期关键节点上的拦截回调：工具调用前、调用后、会话启停、 compaction 前后都可注入自定义逻辑。它解决想加审计、改写、拦截却不想 fork 主循环的矛盾，是外挂式增强Agent的标准插槽，也是本项目会话监听的思想同源。",
         "detailed_explanation": "典型钩子点包括 PreToolUse（审批改写参数）、PostToolUse（记录结果、触发快照）、SessionStart/End（初始化与收尾）、PreCompact（记忆沉淀）。钩子分阻塞式（可否决本次调用）与旁路式（只观测不干预）。工程权衡是钩子越多主链路延迟与故障点越多，关键路径钩子必须设超时快速失败。常见坑是钩子抛异常拖垮主循环、多个钩子顺序隐含依赖、旁路钩子偷偷变成强依赖。",
-        "project_relevance": "vibe-learning是外挂Hook思想实现：监听如PostToolUse旁路钩子，快照如文件变更钩子，SSE如事件分发钩子，可对接官方钩子点。",
+        "project_relevance": "TopoCode是外挂Hook思想实现：监听如PostToolUse旁路钩子，快照如文件变更钩子，SSE如事件分发钩子，可对接官方钩子点。",
         "related_concepts": ["tool-use-engineering", "agent-observability", "guardrails", "agent-loop"],
         "interview_questions": [
             {
@@ -251,7 +251,7 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "Deep Research是面向开放调研的长程智能体形态：给定模糊课题后自主规划检索大纲、多轮搜索浏览交叉验证、最终产出带引用的长篇报告。它解决传统搜索只给碎片链接、人工 synthesis 耗时数小时的问题，把检索从找答案升级为做研究。",
         "detailed_explanation": "核心组件是规划器（拆解子问题与检索大纲）、浏览器工具链（搜索、翻页、PDF解析）、证据管理（引用溯源、冲突标注）、报告生成器（大纲到长文）。流程是规划、并行检索、证据聚合、澄清追问、成稿。工程权衡是广度与成本的矛盾：检索轮次越多覆盖越全但token与时间爆炸，需用信息增益决定何时收敛。常见坑是引用幻觉（编造来源）、只搜英文或只搜中文的语料偏斜、报告臃肿无结论。",
-        "project_relevance": "vibe-learning知识库建设与Deep Research同源：研报式检索沉淀条目，监听记录研究轨迹，快照验证引用证据，SSE推送长任务进度。",
+        "project_relevance": "TopoCode知识库建设与Deep Research同源：研报式检索沉淀条目，监听记录研究轨迹，快照验证引用证据，SSE推送长任务进度。",
         "related_concepts": ["agentic-rag", "planner-executor", "computer-use-agent", "agent-evaluation"],
         "interview_questions": [
             {
@@ -271,7 +271,7 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "Computer Use是直接操作图形界面的智能体形态：看屏幕截图定位按钮输入框，用点击拖拽敲键盘完成跨应用任务。它解决大量老旧系统无API、RPA靠固定坐标一改版就崩的问题，让Agent像人一样用电脑，是自动化最后的通用入口。",
         "detailed_explanation": "技术栈分三层：感知（截图加无障碍树a11y tree做元素 grounding，纯视觉与树结构融合定位）、规划（把任务拆成点击序列，异常弹窗分支处理）、执行（OS级键鼠注入、操作前后截图diff验效）。工程权衡是速度与可靠：每步截图验证最稳但慢，无验证连击最快但一步错步步错。常见坑是分辨率缩放导致坐标漂移、动态加载元素误点、验证码与支付等红线环节无人值守。",
-        "project_relevance": "vibe-learning聚焦代码会话观测，与Computer Use互补：快照diff校验GUI操作生效，SSE推送长任务进度，图谱沉淀界面操作知识。",
+        "project_relevance": "TopoCode聚焦代码会话观测，与Computer Use互补：快照diff校验GUI操作生效，SSE推送长任务进度，图谱沉淀界面操作知识。",
         "related_concepts": ["deep-research-agent", "sandbox-execution", "human-in-the-loop", "agent-observability"],
         "interview_questions": [
             {
@@ -291,7 +291,7 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "提示注入是攻击者在用户输入或第三方内容中夹带恶意指令、诱使模型违背系统指令的攻击；防御是输入输出多层设防的体系。它解决Agent越自主攻击面越大、一条网页内容就能拐走整个任务的问题，是直接注入与间接注入两条战线的对抗工程。",
         "detailed_explanation": "攻击分直接注入（用户明示越狱）与间接注入（网页、文档、工具回填中藏指令，后者对Agent杀伤最大）。防御纵深四层：输入清洗（可疑指令模式识别）、权限隔离（第三方内容打标为data永不提权为instruction）、动作复核（敏感工具调用二次确认）、输出审计。工程权衡是安全与可用：过度防御把正常文档也拒了。常见坑是只防用户输入不管工具回填、用模型防模型被套娃绕过、忽视多轮渐进式诱导。",
-        "project_relevance": "vibe-learning会话监听是注入取证利器：记录恶意回填与拐跑步骤，快照验证文件破坏，图谱沉淀注入模式库，SSE实时告警拐点。",
+        "project_relevance": "TopoCode会话监听是注入取证利器：记录恶意回填与拐跑步骤，快照验证文件破坏，图谱沉淀注入模式库，SSE实时告警拐点。",
         "related_concepts": ["guardrails", "human-in-the-loop", "sandbox-execution", "mcp-protocol"],
         "interview_questions": [
             {
@@ -311,7 +311,7 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "Agentic RAG是把检索权交给Agent的增强范式：模型自主判断何时检索、用什么query、检索质量不行就换词重查、证据够了才作答。它解决传统RAG一次检索定生死、复杂问题单query召回不全的问题，把检索从管道变成带反馈的决策循环。",
         "detailed_explanation": "核心机制是检索决策（按需触发而非每问必检）、query改写（子问题拆分、多视角复述）、证据评估（Self-RAG式打分决定用、弃或重查）、纠正循环（CRAG对低质结果做网络回退）。工程权衡是检索轮次与延迟成本，需设最大轮次与早停。常见坑是检索死循环反复换词查同一批文档、证据冲突时模型和稀泥、引用与正文脱钩无法溯源。",
-        "project_relevance": "vibe-learning知识检索可用Agentic RAG：关键词失手改写再查，快照与会话事件构成混合语料，SSE返回检索进度，图谱支持多跳关联。",
+        "project_relevance": "TopoCode知识检索可用Agentic RAG：关键词失手改写再查，快照与会话事件构成混合语料，SSE返回检索进度，图谱支持多跳关联。",
         "related_concepts": ["embedding-vector", "vector-db-ann", "agent-memory-system", "deep-research-agent"],
         "interview_questions": [
             {
@@ -331,7 +331,7 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "Planner-Executor是主从式Agent架构：Planner负责全局拆解里程碑与依赖，Executor认领子任务用ReAct具体执行，遇阻反馈给Planner重规划。它解决单Agent长任务顾头不顾尾、纯ReAct短视跑偏的问题，是复杂任务稳定性的经典答案。",
         "detailed_explanation": "三角色分工：Planner产DAG式计划并定验收标准，Executor逐子任务执行并上报证据，Controller做重规划仲裁。通信靠结构化任务包（目标、输入、验收条件）而非自由文本。工程权衡是规划粒度：太粗Executor自由发挥易跑偏，太细Planner成瓶颈。常见坑是计划一次定死不重规划、子任务验收走过场、Executor上下文拿不到全局目标导致局部最优。",
-        "project_relevance": "vibe-learning事件模型映射该架构：监听区分规划与执行span，快照diff作子任务验收证据，SSE按里程碑推送，图谱展示任务分解树。",
+        "project_relevance": "TopoCode事件模型映射该架构：监听区分规划与执行span，快照diff作子任务验收证据，SSE按里程碑推送，图谱展示任务分解树。",
         "related_concepts": ["react-pattern", "agent-loop", "multi-agent-system", "scratchpad-context"],
         "interview_questions": [
             {
@@ -351,7 +351,7 @@ EXTRA_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "Scratchpad是Agent在上下文中维护的显式工作区：每步的思考、尝试、观察结论以半结构化形式暂存，供后续步骤回看纠偏。它解决长链推理中间结论稍纵即逝、错了不知哪步错的问题，是ReAct能自我纠正的记忆载体。",
         "detailed_explanation": "组织形式有追加式日志（Thought、Action、Observation三元组顺序沉淀）与状态板式（TODO清单、已知事实、待验证假设分区维护）两种。写入靠模型自觉或模板约束，读取靠全文回看或摘要压缩。工程权衡是详略：记太细窗口爆炸，记太粗纠偏无据。常见坑是草稿与最终答案矛盾、错误结论沉淀后被后续步骤当事实引用、 compaction 时草稿被一刀切丢掉关键中间态。",
-        "project_relevance": "vibe-learning会话监听在外部重建scratchpad：拼出可回放决策链；长会话摘要与SSE步骤流同样面临草稿压缩取舍。",
+        "project_relevance": "TopoCode会话监听在外部重建scratchpad：拼出可回放决策链；长会话摘要与SSE步骤流同样面临草稿压缩取舍。",
         "related_concepts": ["react-pattern", "agent-memory-system", "context-harness", "token-budget"],
         "interview_questions": [
             {

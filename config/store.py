@@ -9,8 +9,18 @@ import time
 
 
 def data_dir():
-    return os.environ.get("VIBE_LEARNING_DATA",
-                           os.path.expanduser("~/.vibe-learning"))
+    override = os.environ.get("TOPOCODE_DATA") or os.environ.get("VIBE_LEARNING_DATA")
+    if override:
+        return override
+    new_dir = os.path.expanduser("~/.topocode")
+    old_dir = os.path.expanduser("~/.vibe-learning")
+    if not os.path.exists(new_dir) and os.path.exists(old_dir):
+        try:
+            import shutil
+            shutil.copytree(old_dir, new_dir)
+        except Exception:
+            pass
+    return new_dir
 
 
 def _path(name):

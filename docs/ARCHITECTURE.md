@@ -1,17 +1,17 @@
-# vibe-learning 框架设计规范
+# TopoCode 框架设计规范
 
-> 本文档是 vibe-learning 的权威架构规范。任何 AI 或开发者在本仓库改动代码前必须先读本文件。
+> 本文档是 TopoCode 的权威架构规范。任何 AI 或开发者在本仓库改动代码前必须先读本文件。
 > 与代码冲突时以代码为准，但改动使本文档过时的一方必须同步更新本文档。
 
 ## 1. 定位与硬边界
 
-vibe-learning 是**独立外挂式 Agent 项目实时分析系统**：只读监听本机各 Coding Agent
+TopoCode 是**独立外挂式 Agent 项目实时分析系统**：只读监听本机各 Coding Agent
 （Claude Code / Codex / Kimi Code 等）在被观察项目目录里的会话与文件改动，
 实时生成项目图谱、会话时间线与知识解构。
 
 硬性边界（不可违反）：
 
-1. **只读观察**：永不写被观察项目目录，永不写任何 agent 家目录；自身状态只落在 `~/.vibe-learning/`。
+1. **只读观察**：永不写被观察项目目录，永不写任何 agent 家目录；自身状态只落在 `~/.TopoCode/`。
 2. **本地回环**：HTTP 服务只绑 `127.0.0.1`，不鉴权，不暴露局域网。
 3. **脱敏出域**：送给分析模型的只有脱敏摘要与文件元数据（路径/行数/语言），
    绝不输出源码正文与 diff；key/token/secret/password/Authorization/Bearer 赋值一律替换为 `[credential omitted]`。
@@ -184,7 +184,7 @@ project_relevance?, related_concepts[id...], interview_questions[{question,answe
 基础扩展包通过ENTRY_REFERENCES为协议/实现词条指定原始规范链接，通过RELATED维护逐词条关联，
 覆盖请求取消、Python网关、依赖图算法、列表排序与梯度裁剪等细分概念。
 
-## 5. 存储布局（`~/.vibe-learning/`）
+## 5. 存储布局（`~/.TopoCode/`）
 
 ```
 config.json                 登记项目列表、模型供应商列表、active_model_id、忽略名单
@@ -195,7 +195,7 @@ memory/user-<slug>.json     用户画像记忆（user.memory.v1，后台维护�
 offsets.json                各会话文件轮询偏移
 ```
 
-`<slug>` = 项目绝对路径的稳定哈希（`store._slug`）；`VIBE_LEARNING_DATA` 可覆盖数据目录。
+`<slug>` = 项目绝对路径的稳定哈希（`store._slug`）；`TOPOCODE_DATA` 可覆盖数据目录。
 会话分析存于事件的 `dialogue`（早期版本为 `analysis`），架构全量/增量结果保存为当前架构档案。
 文件深度模型分析仅缓存于 `model_client.client._FILE_DEEP_CACHE` 与前端内存，服务重启后需重新分析；
 术语弹窗及后续提问统一走`POST /api/knowledge/explain`，返回general/project/references/cached/forked及可用的cached_tokens。

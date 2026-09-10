@@ -1,4 +1,4 @@
-"""Agent framework for vibe-learning.
+"""Agent framework for TopoCode.
 Provides ProjectAnalysisAgent and SessionMemory for deep analysis of developer-agent interactions.
 """
 

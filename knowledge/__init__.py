@@ -1,1 +1,1 @@
-"""Knowledge and Interview Question System for vibe-learning."""
+"""Knowledge and Interview Question System for TopoCode."""

@@ -284,7 +284,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "计算机网络与协议",
         "definition": "超文本传输协议（HyperText Transfer Protocol），基于请求-响应模型的无状态应用层网络传输协议，现代 Web 与 RESTful API 的基石。",
         "detailed_explanation": "HTTP/1.1 引入持久连接(Keep-Alive)与分块传输(Chunked Transfer)；HTTP/2 引入多路复用(Multiplexing)与头部压缩(HPACK)彻底解决队头阻塞；HTTPS 在传输层之上引入 TLS/SSL 加密握手保证数据机密性与完整性。",
-        "project_relevance": "vibe-learning 使用 Python 标准库 ThreadingHTTPServer 提供单进程零外部依赖的 HTTP API 与静态 Web 资源托管服务。",
+        "project_relevance": "TopoCode 使用 Python 标准库 ThreadingHTTPServer 提供单进程零外部依赖的 HTTP API 与静态 Web 资源托管服务。",
         "related_concepts": ["sse", "tcp", "websocket", "restful"],
         "interview_questions": [
             {
@@ -304,7 +304,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "计算机网络与协议",
         "definition": "基于标准 HTTP 协议的轻量级服务端到客户端单向实时流式事件推送机制（Content-Type: text/event-stream）。",
         "detailed_explanation": "相比 WebSocket 的全双工高协议成本，SSE 基于标准长连接，浏览器原生提供 EventSource API，自带自动重连、Last-Event-ID 断点追溯机制，且天生穿透各种反向代理防火墙。",
-        "project_relevance": "vibe-learning 核心流式传输通道：通过 GET /api/events/stream 实时把新检测到的 Agent 代码改动和架构分析毫秒级推送到前端页面，无需前端 1 秒一轮询。",
+        "project_relevance": "TopoCode 核心流式传输通道：通过 GET /api/events/stream 实时把新检测到的 Agent 代码改动和架构分析毫秒级推送到前端页面，无需前端 1 秒一轮询。",
         "related_concepts": ["http", "websocket", "polling"],
         "interview_questions": [
             {
@@ -336,7 +336,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "编译原理与工程工具",
         "definition": "源代码语法结构的树状对象表示，将纯文本代码转化为节点分明的层次树（如 FunctionDef, ClassDef, Import, Call），是编译器、Linter、Babel 和静态代码分析的基础。",
         "detailed_explanation": "通过词法分析(Tokenize)将字符流转为 Token，再经语法分析(Parse)根据语言文法构建 AST。遍历 AST（Visitor 模式）可在无需执行代码的前提下精确分析函数签名、变量调用、依赖导入关系与代码圈复杂度。",
-        "project_relevance": "vibe-learning 的底层分析引擎：使用 Python 标准库 ast 模块在毫秒级内提取代码库中所有顶级类、函数签名、行号、以及调用关系，精准分析出每个文件的具体功能职责。",
+        "project_relevance": "TopoCode 的底层分析引擎：使用 Python 标准库 ast 模块在毫秒级内提取代码库中所有顶级类、函数签名、行号、以及调用关系，精准分析出每个文件的具体功能职责。",
         "related_concepts": ["pagerank", "diff"],
         "interview_questions": [
             {
@@ -352,7 +352,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "图算法与数据结构",
         "definition": "Google 经典的网页重要性评估图算法，基于随机游走模型与马尔可夫链，通过“被高质量节点引用的节点更重要”的递归投票原理计算每个节点的稳态权重。",
         "detailed_explanation": "在有向图上迭代更新节点权重：PR(u) = (1 - d)/N + d * Σ(PR(v) / OutDegree(v))，其中 d 为阻尼系数（通常取 0.85，代表用户沿外链继续点击的概率）。通过有限次幂迭代（Power Iteration）直至收敛。",
-        "project_relevance": "vibe-learning 对导入图计算PageRank，与去重改动组权重按90:10组合。文件选择同时保护关键角色和目录覆盖；超预算时预留依赖排序名额，并显式报告遗漏，分数代表依赖重要性而非业务核心的绝对判定。",
+        "project_relevance": "TopoCode 对导入图计算PageRank，与去重改动组权重按90:10组合。文件选择同时保护关键角色和目录覆盖；超预算时预留依赖排序名额，并显式报告遗漏，分数代表依赖重要性而非业务核心的绝对判定。",
         "related_concepts": ["ast", "diff"],
         "interview_questions": [
             {
@@ -368,7 +368,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "信息安全与算法",
         "definition": "基于 ChaCha 核心的高性能密码学哈希函数，速度显著快于 MD5、SHA-1、SHA-256 和 SHA-3，同时具备极高的抗碰撞安全性。",
         "detailed_explanation": "BLAKE2b 专为 64 位平台优化，在现代 CPU 上单核吞吐量超过 1GB/s，常用于大型文件指纹校验、快照增量比对与完整性验证。",
-        "project_relevance": "vibe-learning 对项目目录做有界快照时的文件级指纹生成器：使用 blake2b 对文件内容计算 16 字节十六进制指纹，实现毫秒级判断文件是否被 Agent 修改。",
+        "project_relevance": "TopoCode 对项目目录做有界快照时的文件级指纹生成器：使用 blake2b 对文件内容计算 16 字节十六进制指纹，实现毫秒级判断文件是否被 Agent 修改。",
         "related_concepts": ["diff", "git"],
         "interview_questions": [
             {
@@ -384,7 +384,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "数据工程与文件存储",
         "definition": "每行一个独立且完整的合法 JSON 对象的文本存储格式（换行符分隔），专为大规模日志流式追加、断点读写与分布式处理设计。",
         "detailed_explanation": "传统 JSON 数组在追加数据时必须重新解析整个大文件并闭合括号；JSONL 格式天然支持 O(1) 尾部追加（Append-Only），即使写入被意外中断也不会破坏前序数据行的有效性。",
-        "project_relevance": "Claude Code（~/.claude/projects/*/*.jsonl）与 OpenAI Codex（rollout-*.jsonl）的底层会话存储均采用此格式。vibe-learning 的 Session Tailer 模块通过逐行扫描 JSONL 高效监听并提取会话 Round。",
+        "project_relevance": "Claude Code（~/.claude/projects/*/*.jsonl）与 OpenAI Codex（rollout-*.jsonl）的底层会话存储均采用此格式。TopoCode 的 Session Tailer 模块通过逐行扫描 JSONL 高效监听并提取会话 Round。",
         "related_concepts": ["sse", "ipc"],
         "interview_questions": [
             {
@@ -400,7 +400,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "工程效率与工具",
         "definition": "基于内容寻址文件系统的分布式版本控制体系，通过 Commit（提交对象）、Tree（目录对象）、Blob（文件内容）构成有向无环图(DAG)。",
         "detailed_explanation": "支持完全离线提交、轻量级分支与指针移动。Git Worktree 允许从同一仓库同时检出多个不同分支到独立的本地工作目录，避免频繁切换 stash/checkout。",
-        "project_relevance": "vibe-learning 快照模块优先使用 git ls-files --cached --others --exclude-standard 高效提取文件列表，天然继承项目的 .gitignore 规则；同时监听各平台 Agent 对仓库文件的改动。",
+        "project_relevance": "TopoCode 快照模块优先使用 git ls-files --cached --others --exclude-standard 高效提取文件列表，天然继承项目的 .gitignore 规则；同时监听各平台 Agent 对仓库文件的改动。",
         "related_concepts": ["diff", "blake2b"],
         "interview_questions": [
             {
@@ -416,7 +416,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "算法原理",
         "definition": "求解两个序列间最长公共子序列（LCS）或最短编辑脚本（SES）的经典算法，常用于版本控制中计算新增(added)、删除(deleted)和修改(modified)代码行。",
         "detailed_explanation": "Myers 算法将编辑过程建模在二维网格图上的对角线搜索，结合 BFS 贪心搜索时间复杂度达 O((N+M)D)，其中 D 为差异大小。由于大多数代码变动很小（D 极小），该算法在实际工程中极度迅速。",
-        "project_relevance": "vibe-learning 快照与事件系统：在检测到文件内容指纹变更后，计算文件级 diff 增删行数，并以此作为 Agent 改动事件的确定性证据 (Evidence)。",
+        "project_relevance": "TopoCode 快照与事件系统：在检测到文件内容指纹变更后，计算文件级 diff 增删行数，并以此作为 Agent 改动事件的确定性证据 (Evidence)。",
         "related_concepts": ["git", "blake2b"],
         "interview_questions": [
             {
@@ -432,7 +432,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "操作系统与并发编程",
         "definition": "操作系统调度的最小执行单元，多个线程共享同一进程的地址空间与资源，适合高并发 I/O 密集型应用。",
         "detailed_explanation": "在 Python 中由于全局解释器锁（GIL）的存在，多线程无法利用多核 CPU 加速纯计算任务，但在网络 I/O、磁盘读写和 HTTP 长连接推送场景中，多线程在遇到 I/O 阻塞时自动释放 GIL，能以极低的内存开销实现高并发吞吐。",
-        "project_relevance": "vibe-learning 后端采用 ThreadingHTTPServer 并行处理 HTTP 请求与 SSE 长连接，同时启动独立的后台守护线程 _poll_loop() 周期性扫描项目与监听 Agent 会话。",
+        "project_relevance": "TopoCode 后端采用 ThreadingHTTPServer 并行处理 HTTP 请求与 SSE 长连接，同时启动独立的后台守护线程 _poll_loop() 周期性扫描项目与监听 Agent 会话。",
         "related_concepts": ["http", "sse", "ipc"],
         "interview_questions": [
             {
@@ -459,7 +459,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "计算机网络与协议",
         "definition": "运行在传输层的面向连接、可靠、基于字节流的双向通信协议。通过序列号(Seq)、确认号(Ack)、超时重传和滑动窗口实现无差错无丢失的端到端数据传输。",
         "detailed_explanation": "建立连接采用三次握手（同步初始序号 ISN 并协商 MSS），断开连接采用四次挥手（TIME_WAIT 状态必须维持 2MSL 以确保最终 ACK 到达对端并清除网络残留报文）。核心拥塞控制算法涵盖慢启动、拥塞避免、快重传与快恢复（如 CUBIC, BBR 算法）。",
-        "project_relevance": "vibe-learning 的 HTTP 服务与 SSE 流式推送底层均依托 TCP 连接保障数据传输的绝对完整与顺序到达。",
+        "project_relevance": "TopoCode 的 HTTP 服务与 SSE 流式推送底层均依托 TCP 连接保障数据传输的绝对完整与顺序到达。",
         "related_concepts": [
             "http-protocol",
             "udp-protocol",
@@ -521,7 +521,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "计算机网络与协议",
         "definition": "将人类易记的域名（如 github.com）映射为计算机路由寻址所需的数字 IP 地址（如 140.82.112.3）的分布式分层命名系统。",
         "detailed_explanation": "客户端解析优先查找本地 Hosts 与浏览器/系统 DNS 缓存，未命中则请求本地递归 DNS 服务器，递归服务器依次向根域名服务器(.)、顶级域名服务器(.com)、权威域名服务器发起迭代查询，最终获得 A/AAAA 记录并设置 TTL 缓存。",
-        "project_relevance": "vibe-learning 服务默认绑定 127.0.0.1 本地回环地址，避免经由外部网络 DNS 解析和路由，确保本机数据绝对私密不外泄。",
+        "project_relevance": "TopoCode 服务默认绑定 127.0.0.1 本地回环地址，避免经由外部网络 DNS 解析和路由，确保本机数据绝对私密不外泄。",
         "related_concepts": [
             "http-protocol",
             "tcp-protocol",
@@ -666,7 +666,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "数据库与存储引擎",
         "definition": "关系型数据库保障可靠操作的核心事务理论（原子性、一致性、隔离性、持久性），以及利用多版本并发控制（MVCC）解决读写并发冲突的实现机制。",
         "detailed_explanation": "MySQL 默认可重复读（Repeatable Read）隔离级别通过 Undo Log 版本链和活跃事务数组（Read View）实现一致性非锁定读（快照读），在不加表锁的前提下通过 Next-Key Lock 算法彻底防御幻读与脏读。",
-        "project_relevance": "vibe-learning 的事件文件追加与状态更新虽然基于单机文件锁，但在并发持久化上同样借鉴了 ACID 的原子写入与防数据破坏理念。",
+        "project_relevance": "TopoCode 的事件文件追加与状态更新虽然基于单机文件锁，但在并发持久化上同样借鉴了 ACID 的原子写入与防数据破坏理念。",
         "related_concepts": [
             "mysql-innodb-bplus-tree",
             "redis-distributed-lock",
@@ -750,7 +750,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "AI算法与检索",
         "definition": "专为存储、管理和高效检索大模型 Embedding 高维向量而设计的数据库系统。通过近似最近邻（ANN）算法在万亿维空间中实现毫秒级 Top-K 语义匹配。",
         "detailed_explanation": "常用检索算法包括分层小世界图（HNSW，基于多层跳表和图跳跃实现对数级搜索复杂度）与倒排文件量化（IVF-PQ）。结合元数据标量过滤，解决非结构化数据到高维语义空间的查询诉求。",
-        "project_relevance": "vibe-learning 的 RAG 知识检索模块底层技术基石：通过向量相似度计算秒级召回相关联的技术考点与八股原题。",
+        "project_relevance": "TopoCode 的 RAG 知识检索模块底层技术基石：通过向量相似度计算秒级召回相关联的技术考点与八股原题。",
         "related_concepts": [
             "rag-pattern",
             "embedding-vector",
@@ -806,7 +806,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "Agent算法",
         "definition": "大语言模型的一种关键提示与推理增强技术。通过引导模型在输出最终答案前显式生成中间推理步骤，显著提升复杂逻辑与代码编写的准确率。",
         "detailed_explanation": "在预训练规模超过涌现门槛后，CoT 能有效将长链决策在自回归生成中转化为多个短程条件概率计算，缓解直接生成答案导致的幻觉与逻辑短路。现代推理模型（如 o1, R1）已将 CoT 深度内化为长链自反思强化学习行为。",
-        "project_relevance": "vibe-learning 的 Agent 分析提示词要求模型在给出结论前分步显式拆解：改了哪里 -> 意味着什么 -> Agent 意图解构 -> 知识点提取。",
+        "project_relevance": "TopoCode 的 Agent 分析提示词要求模型在给出结论前分步显式拆解：改了哪里 -> 意味着什么 -> Agent 意图解构 -> 知识点提取。",
         "related_concepts": [
             "planning-tot-got",
             "reflection-self-refine",
@@ -892,7 +892,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "AI算法与检索",
         "definition": "大模型在输出层将未归一化的原始 Logits 转化为下一个 Token 概率分布时的随机性与确定性控制策略。",
         "detailed_explanation": "Temperature 调整分布平滑度：越小确定性越高，越大多样性越强。Top-p 核采样仅从累计概率达到阈值 p 的候选集合中采样，截断低概率长尾词。",
-        "project_relevance": "vibe-learning 的 Agent 分析任务需要稳定的 JSON 契约输出，因此分析请求默认将 Temperature 设定为 0.1~0.2，防止格式漂移。",
+        "project_relevance": "TopoCode 的 Agent 分析任务需要稳定的 JSON 契约输出，因此分析请求默认将 Temperature 设定为 0.1~0.2，防止格式漂移。",
         "related_concepts": [
             "cot-reasoning",
             "prompt-engineering",
@@ -922,7 +922,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "前端工程",
         "definition": "浏览器与 Node.js 运行时的单线程非阻塞异步调度模型。通过调用栈、微任务队列与宏任务队列的协调，实现异步 I/O 与 UI 平滑渲染。",
         "detailed_explanation": "执行主线程同步代码 -> 清空调用栈 -> 依序清空当前所有微任务（Promise.then, queueMicrotask）-> 检查执行浏览器 UI 渲染 -> 从宏任务队列取出下一个任务执行，周而复始。",
-        "project_relevance": "vibe-learning 前端在处理高频 SSE 事件流推送和 SVG 图谱重绘时，严格利用微任务节流与 requestAnimationFrame 避免主线程卡顿。",
+        "project_relevance": "TopoCode 前端在处理高频 SSE 事件流推送和 SVG 图谱重绘时，严格利用微任务节流与 requestAnimationFrame 避免主线程卡顿。",
         "related_concepts": [
             "web-worker-concurrency",
             "sse-streaming-rendering",
@@ -977,7 +977,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "前端工程",
         "definition": "Web 前端两大核心绘图渲染体系：SVG（基于 XML 标签的保留模式矢量图形，每个形状都是独立 DOM 节点）；Canvas（基于像素网格的立即模式位图画布）。",
         "detailed_explanation": "SVG 矢量无限放大不失真、支持 CSS 样式与原生事件监听；Canvas 像素渲染极快适合百万级密集渲染。工业级常采用混合架构。",
-        "project_relevance": "vibe-learning 的拓扑网图与分层组件卡全面选用 SVG 与现代 CSS 结合：利用矢量无损缩放特性与原生事件交互，精准实现节点 hover 联动高亮和点击全景分析。",
+        "project_relevance": "TopoCode 的拓扑网图与分层组件卡全面选用 SVG 与现代 CSS 结合：利用矢量无损缩放特性与原生事件交互，精准实现节点 hover 联动高亮和点击全景分析。",
         "related_concepts": [
             "web-worker-concurrency",
             "react-virtual-dom-fiber"
@@ -1005,7 +1005,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "操作系统与并发编程",
         "definition": "操作系统提供给不同进程之间进行数据交换、协同同步的一系列系统调用接口（包括匿名/命名管道、Unix Domain Socket、共享内存等）。",
         "detailed_explanation": "共享内存是速度最快的 IPC 机制（零拷贝，需配合信号量/互斥锁）；Unix Domain Socket 免去 TCP/IP 协议栈封包解包，本机吞吐极高；管道常用于父子进程单向字节流传输。",
-        "project_relevance": "vibe-learning 监听各 Coding Agent 会话时，Claude Code 的 Hook 脚本与本地服务之间、以及与操作系统终端管道之间的数据交换正是典型进程间通信应用。",
+        "project_relevance": "TopoCode 监听各 Coding Agent 会话时，Claude Code 的 Hook 脚本与本地服务之间、以及与操作系统终端管道之间的数据交换正是典型进程间通信应用。",
         "related_concepts": [
             "threading-concurrency",
             "cwd-process-context",
@@ -1033,7 +1033,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "操作系统与并发编程",
         "definition": "操作系统为每个运行中的进程在内核 PCB 中维护的核心属性，指示该进程在解析相对文件路径时的根起始点。",
         "detailed_explanation": "子进程默认继承父进程的 CWD。在多 Agent 协同和自动化脚手架中，CWD 是判定 Agent 当前身处哪个项目目录、改动文件落入哪个物理工程的唯一证据。",
-        "project_relevance": "vibe-learning 的核心归因算法（tailer.attribute）：严格根据各平台 Agent 会话中的 cwd 属性比对已登记的项目列表，实现会话轮次的绝对唯一目录归因。",
+        "project_relevance": "TopoCode 的核心归因算法（tailer.attribute）：严格根据各平台 Agent 会话中的 cwd 属性比对已登记的项目列表，实现会话轮次的绝对唯一目录归因。",
         "related_concepts": [
             "git-vcs",
             "ipc-mechanism"
@@ -1061,7 +1061,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "Agent应用开发",
         "definition": "通过精细设计输入提示文本结构、角色设定、上下文注入与输出 Schema 约束，最大化激发大模型推理潜力并获得稳定确定性输出的系统性方法论。",
         "detailed_explanation": "生产级 Prompt 工程依赖防注入、防越狱、思维链路约束与 JSON/XML 标签闭合校验。通过前置约束（如“严格只返回一个 JSON 对象”），将非结构化智能安全锚定在结构化工程管道中。",
-        "project_relevance": "vibe-learning 的 agent/prompts.py 精心打造了对话解构与系统架构抽象提示词，强制模型输出固定版本 Schema，是系统高质量分析图谱的基石。",
+        "project_relevance": "TopoCode 的 agent/prompts.py 精心打造了对话解构与系统架构抽象提示词，强制模型输出固定版本 Schema，是系统高质量分析图谱的基石。",
         "related_concepts": [
             "cot-reasoning",
             "context-harness",
@@ -1090,7 +1090,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "AI算法与检索",
         "definition": "大语言模型进行文本处理、注意力计算与计费的最小原子分词单位。一个 Token 通常对应约 0.75 个英文单词或 0.5~1 个中文字符。",
         "detailed_explanation": "主流分词器采用 BPE 字节对编码。上下文窗口受模型自身架构和注意力退化曲线制约，Agent 循环中必须实时计算与管理 Token 预算，对长文本进行动态截断与折叠。",
-        "project_relevance": "vibe-learning 快照与分析引擎执行严格的预算管理：单文件上限 512KB、总文本上限 64MB，会话截断保护，确保送入模型的 Token 不会超出窗口预算。",
+        "project_relevance": "TopoCode 快照与分析引擎执行严格的预算管理：单文件上限 512KB、总文本上限 64MB，会话截断保护，确保送入模型的 Token 不会超出窗口预算。",
         "related_concepts": [
             "kv-cache-acceleration",
             "context-harness",
@@ -1117,7 +1117,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "数据库与存储引擎",
         "definition": "零配置、无服务器进程、单文件存储的自给自足式嵌入式 ACID 关系数据库引擎。",
         "detailed_explanation": "采用 B-tree 组织表数据与索引，直接内嵌在宿主进程内存中运行，免除网络 IPC 开销。启用 WAL（Write-Ahead Logging）预写日志模式后支持读写并发互不阻塞。",
-        "project_relevance": "单进程本地桌面与分析工具的最佳伴侣，与 vibe-learning 的单机文件存储架构高度契合。",
+        "project_relevance": "单进程本地桌面与分析工具的最佳伴侣，与 TopoCode 的单机文件存储架构高度契合。",
         "related_concepts": [
             "mysql-innodb-bplus-tree",
             "acid-transactions"
@@ -1144,7 +1144,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "计算机网络与协议",
         "definition": "浏览器同源策略（协议、域名、端口必须完全相同）下的安全跨域访问规范。通过 HTTP 响应头授权受信任的外部源访问自身资源。",
         "detailed_explanation": "简单请求直接携带 Origin 发送；非简单请求（如携带自定义 Header 或 Content-Type 为 application/json）会先自动触发 OPTIONS 预检请求（Preflight Request），服务器返回 Access-Control-Allow-Origin 等头通过后才允许正式请求通信。",
-        "project_relevance": "vibe-learning 允许通过本地浏览器任何端口或外部客户端访问本机的 HTTP/SSE API，需保证跨域头的健壮支持。",
+        "project_relevance": "TopoCode 允许通过本地浏览器任何端口或外部客户端访问本机的 HTTP/SSE API，需保证跨域头的健壮支持。",
         "related_concepts": [
             "http-protocol",
             "restful-architecture"
@@ -1170,7 +1170,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "计算机网络与协议",
         "definition": "表现层状态转移（Representational State Transfer），一种基于标准 HTTP 协议动词（GET, POST, PUT, DELETE, PATCH）的资源定位与操作架构风格。",
         "detailed_explanation": "核心设计原则：资源具有统一 URI 标识；无状态（Stateless，服务端不保存客户端上下文会话）；动词语义明确（GET 读安全幂等，PUT 全量更新幂等，DELETE 幂等，POST 非幂等）；通过标准状态码（200, 201, 400, 404, 500）表达结果。",
-        "project_relevance": "vibe-learning 的全部 API 遵循 RESTful 规范：GET /api/map 获取图谱、GET /api/file_analysis 获取文件分析、POST /api/config 提交配置变更。",
+        "project_relevance": "TopoCode 的全部 API 遵循 RESTful 规范：GET /api/map 获取图谱、GET /api/file_analysis 获取文件分析、POST /api/config 提交配置变更。",
         "related_concepts": [
             "http-protocol",
             "grpc-protocol",
@@ -1198,7 +1198,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "工程效率与工具",
         "definition": "将多个独立发布的模块、应用、微服务或跨平台 SDK 存放在同一个版本控制仓库中进行统一构建、版本联动与依赖共享的软件工程架构模式。",
         "detailed_explanation": "相比多仓库（Polyrepo），Monorepo 具有原子化跨包重构、零发包本地依赖调试、依赖统一去重（通过 pnpm workspace 硬链接）优势；配合 Turborepo / Nx 进行基于变更图（Dependency Graph）的增量缓存构建。",
-        "project_relevance": "vibe-learning 在扫描大型项目时需识别 Monorepo 多包结构，分别提取不同包的清单文件并识别依赖流向。",
+        "project_relevance": "TopoCode 在扫描大型项目时需识别 Monorepo 多包结构，分别提取不同包的清单文件并识别依赖流向。",
         "related_concepts": [
             "git-vcs",
             "cicd-pipeline",
@@ -1282,7 +1282,7 @@ KNOWLEDGE_ENTRIES = [
         "category": "计算机网络与协议",
         "definition": "客户端定期向服务端主动发起请求以检测状态更新的通信模式。短轮询固定时间间隔反复请求；长轮询服务端在无新数据时保持连接挂起，直到有更新或超时才返回。",
         "detailed_explanation": "短轮询实现最简单，但高频请求会带来巨大网络握手开销与服务端空转压力；长轮询显著降低空请求，但长期占用服务端线程/连接。现代实时流式广播普遍推荐采用单向长连接 SSE 替代轮询。",
-        "project_relevance": "vibe-learning 的双重保障设计：前端默认优先通过 SSE 实时监听事件推送，同时配合 45 秒温和轮询兜底，既保证极速响应又杜绝断网漏事件。",
+        "project_relevance": "TopoCode 的双重保障设计：前端默认优先通过 SSE 实时监听事件推送，同时配合 45 秒温和轮询兜底，既保证极速响应又杜绝断网漏事件。",
         "related_concepts": [
             "sse-eventsource",
             "websocket-protocol",

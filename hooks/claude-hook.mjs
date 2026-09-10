@@ -4,14 +4,14 @@
 //
 // Install: add to ~/.claude/settings.json:
 //   {"hooks": {"SessionStart": [{"hooks": [{"type": "command",
-//     "command": "node /path/to/vibe-learning/hooks/claude-hook.mjs",
+//     "command": "node /path/to/TopoCode/hooks/claude-hook.mjs",
 //     "timeout": 2}]}],
 //     "PreToolUse": [...same...], "PostToolUse": [...same...],
 //     "Stop": [...same...], "SessionEnd": [...same...]}}
 // The hook event JSON arrives on stdin.
 import http from "http";
 
-const PORT = process.env.VIBE_LEARNING_PORT || 8765;
+const PORT = process.env.TOPOCODE_PORT || process.env.VIBE_LEARNING_PORT || 8765;
 
 function main() {
   let raw = "";

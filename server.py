@@ -290,7 +290,7 @@ def _hook_event(payload):
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "vibe-learning/1.0"
+    server_version = "TopoCode/1.0"
 
     def log_message(self, *args):
         pass
@@ -825,7 +825,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def main(argv):
     import argparse
-    parser = argparse.ArgumentParser(description="vibe-learning observer")
+    parser = argparse.ArgumentParser(description="TopoCode observer")
     parser.add_argument("--project", default="")
     parser.add_argument("--port", type=int, default=0)
     args = parser.parse_args(argv)
@@ -841,12 +841,12 @@ def main(argv):
     port = args.port or config.get("port") or 8765
     STATE["model"] = store_mod.get_active_model(config)
     STATE["projects"] = config.get("projects", [])
-    threading.Thread(target=_analysis_worker, name="vibe-learning-analysis", daemon=True).start()
-    threading.Thread(target=_architecture_worker, name="vibe-learning-architecture", daemon=True).start()
-    thread = threading.Thread(target=_poll_loop, name="vibe-learning-listener", daemon=True)
+    threading.Thread(target=_analysis_worker, name="topocode-analysis", daemon=True).start()
+    threading.Thread(target=_architecture_worker, name="topocode-architecture", daemon=True).start()
+    thread = threading.Thread(target=_poll_loop, name="topocode-listener", daemon=True)
     thread.start()
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    print("vibe-learning on http://127.0.0.1:%d  projects=%s"
+    print("TopoCode on http://127.0.0.1:%d  projects=%s"
           % (server.server_port, STATE["projects"]), flush=True)
     try:
         server.serve_forever()
