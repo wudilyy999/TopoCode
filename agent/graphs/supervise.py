@@ -261,5 +261,13 @@ def resume_escalation(agent_id, session_id, action):
     if action not in ("disable", "extend", "continue"):
         return False, "unknown action"
     config = {"configurable": {"thread_id": _thread_id(agent_id, session_id)}}
-    final = _graph().invoke(Command(resume={"action": action}), config=config)
+    graph = _graph()
+    snapshot = graph.get_state(config)
+    if not snapshot or not snapshot.next:
+        # No interrupted run is holding this session; applying an action now
+        # would resume from a stale checkpoint and echo an old decision.
+        return False, "no pending escalation for this session"
+    final = graph.invoke(Command(resume={"action": action}), config=config)
+    if final.get("__interrupt__"):
+        return False, "escalation still pending"
     return True, final.get("decision") or {}
