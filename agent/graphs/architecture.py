@@ -307,11 +307,19 @@ def state_has_previous(state: ArchState) -> bool:
 _COMPILED = None
 
 
-def revise_graph(project, model_cfg, lang="zh", full=False):
-    """Run the architecture revision graph. Mirrors revision.revise()'s contract."""
+def _graph():
     global _COMPILED
     if _COMPILED is None:
         _COMPILED = build_graph()
+    return _COMPILED
+
+
+def thread_id_for(project):
+    return "arch-" + (architecture.slugify_id(project.rstrip("/").rsplit("/", 1)[-1]) or "project")
+
+
+def revise_graph(project, model_cfg, lang="zh", full=False):
+    """Run the architecture revision graph. Mirrors revision.revise()'s contract."""
     state: ArchState = {
         "project": project,
         "model_cfg": model_cfg,
@@ -322,8 +330,7 @@ def revise_graph(project, model_cfg, lang="zh", full=False):
         "result": None,
         "trace": [],
     }
-    thread_id = "arch-" + (architecture.slugify_id(project.rstrip("/").rsplit("/", 1)[-1]) or "project")
-    final = _COMPILED.invoke(state, config={"configurable": {"thread_id": thread_id}})
+    final = _graph().invoke(state, config={"configurable": {"thread_id": thread_id_for(project)}})
     _release(final)
     code = final.get("code") or 200
     result = final.get("result") or {"ok": False, "error": "revision produced no result"}

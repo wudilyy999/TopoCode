@@ -5,6 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TopoCode · 独立外挂式 Agent 项目实时分析系统</title>
 <style>
+.graph-badge { cursor:pointer; font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid var(--line); color:var(--dim); user-select:none; }
+.graph-badge.busy { color:#b7791f; border-color:#b7791f66; background:#b7791f14; animation:graphPulse 1.2s ease-in-out infinite; }
+.graph-badge.ok { color:#2f855a; border-color:#2f855a55; background:#2f855a10; }
+.graph-badge.err { color:#c53030; border-color:#c5303055; background:#c5303010; }
+@keyframes graphPulse { 0%,100% { opacity:1; } 50% { opacity:.45; } }
+.graph-pop { position:absolute; z-index:60; margin-top:6px; background:var(--panel); border:1px solid var(--line); border-radius:10px; box-shadow:0 12px 40px #0006; padding:12px 14px; width:340px; font-size:12px; line-height:1.6; }
+.graph-pop h4 { margin:0 0 6px; font-size:12px; color:var(--txt-main); }
+.graph-pop .gsteps { max-height:220px; overflow-y:auto; margin:6px 0 0; padding:0; list-style:none; }
+.graph-pop .gsteps li { display:flex; justify-content:space-between; gap:8px; padding:2px 0; border-bottom:1px dashed var(--line); color:var(--dim); }
+.graph-pop .gsteps li b { color:var(--txt-main); font-weight:600; }
+.graph-pop .gmeta { color:var(--dim); font-size:11px; }
+</style>
+<style>
   :root {
     --bg: #101216;
     --panel: #181b21;
@@ -964,6 +977,8 @@
   <button data-view="blueprint" class="on">📐 架构分层蓝图</button>
   <button data-view="tree">文件树与关系</button>
   <button id="btn-gen-comp" style="border-color:var(--purple); color:var(--purple);">重新生成架构抽象 ✦</button>
+  <span id="graph-badge" class="graph-badge" style="display:none;" title="LangGraph pipeline"></span>
+  <div id="graph-pop" class="graph-pop" style="display:none;"></div>
   <span id="struct-summary" style="color:var(--dim); margin-left:8px;"></span>
 
   <span class="toolbar-label" style="margin-left:auto;">筛选：</span>
@@ -1323,6 +1338,13 @@ const I18N = {
     guide_calls: '内部调用线索（静态引用，非运行时顺序）：', guide_no_doc: '暂无明确职责说明，可使用 Agent 导读结合符号与上下文解释。',
     guide_static: '静态证据 / 名称候选', guide_model: 'Agent 阅读路线',
     gen_arch: "重新生成架构抽象 ✦",
+    graph_badge_idle: "LangGraph 流水线",
+    graph_badge_run: "架构图执行中",
+    graph_badge_err: "上次执行失败",
+    graph_pop_title: "架构修订图 · 最近轨迹",
+    graph_pop_empty: "尚未运行",
+    graph_pop_sup: "监督图:{n} 个会话 · {e} 个待裁决",
+    graph_ms: "{ms}ms · {n} 节点 · 第 {a} 次尝试",
     filter_label: "筛选：",
     hide_other: "隐藏杂项",
     hide_chatter: "隐藏闲聊",
@@ -3206,7 +3228,56 @@ function syncArchitectureButtons() {
     btn.disabled = busy;
     btn.textContent = t(busy ? 'update_arch_loading' : 'arch_update');
   });
+  syncGraphBadge();
 }
+
+function syncGraphBadge() {
+  const badge = document.getElementById('graph-badge');
+  if (!badge) return;
+  const g = DATA && DATA.graphs;
+  if (!g || !g.architecture) { badge.style.display = 'none'; return; }
+  const busy = Boolean(g.architecture.busy);
+  const failed = !busy && (g.architecture.last_code || 0) >= 400;
+  badge.style.display = 'inline-block';
+  badge.className = 'graph-badge ' + (busy ? 'busy' : failed ? 'err' : 'ok');
+  badge.textContent = '⬡ ' + t(busy ? 'graph_badge_run' : failed ? 'graph_badge_err' : 'graph_badge_idle');
+}
+
+function toggleGraphPop() {
+  const pop = document.getElementById('graph-pop');
+  if (!pop) return;
+  if (pop.style.display === 'block') { pop.style.display = 'none'; return; }
+  const g = (DATA && DATA.graphs) || {};
+  const arch = g.architecture || {};
+  const sup = g.supervise || {};
+  const steps = arch.steps || [];
+  const rows = steps.length
+    ? steps.map(s => `<li><b>${esc(s.node || '?')}</b><span>${esc(s.at || '')}</span></li>`).join('')
+    : `<li><b>${esc(t('graph_pop_empty'))}</b><span></span></li>`;
+  const traceMs = (arch.trace || []).reduce((a, b) => a + (b.ms || 0), 0);
+  const meta = steps.length
+    ? t('graph_ms').replace('{ms}', String(traceMs)).replace('{n}', String((arch.trace || []).length)).replace('{a}', String((arch.attempts || 0) + 1))
+    : '';
+  pop.innerHTML = `<h4>⬡ ${esc(t('graph_pop_title'))}</h4>`
+    + `<div class="gmeta">${esc(meta)}</div>`
+    + `<div class="gmeta">${esc(t('graph_pop_sup')).replace('{n}', String(sup.sessions || 0)).replace('{e}', String(sup.escalations || 0))}</div>`
+    + `<ul class="gsteps">${rows}</ul>`;
+  const badge = document.getElementById('graph-badge');
+  if (badge) {
+    const r = badge.getBoundingClientRect();
+    pop.style.left = Math.max(8, r.left + window.scrollX - 180) + 'px';
+    pop.style.top = (r.bottom + window.scrollY + 6) + 'px';
+  }
+  pop.style.display = 'block';
+}
+
+document.addEventListener('click', (e) => {
+  const pop = document.getElementById('graph-pop');
+  const badge = document.getElementById('graph-badge');
+  if (!pop || pop.style.display !== 'block') return;
+  if (pop.contains(e.target) || (badge && badge.contains(e.target))) return;
+  pop.style.display = 'none';
+});
 
 async function runArchitecture(full) {
   if (!PROJECT || architectureBusy()) return;
@@ -4154,6 +4225,7 @@ const btnTestModel = document.getElementById("btn-test-model");
 if (btnTestModel) btnTestModel.onclick = testModelConnection;
 
 document.getElementById('btn-gen-comp').onclick = () => runArchitecture(true);
+safeBind("graph-badge", "onclick", toggleGraphPop);
 
 document.getElementById("btn-backfill").onclick = async () => {
   const btn = document.getElementById("btn-backfill");

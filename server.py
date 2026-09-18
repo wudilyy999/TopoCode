@@ -94,6 +94,58 @@ def _analyze(event):
     event.setdefault('analysis_status', 'evidence_only')
 
 
+def _thread_steps(graph, thread_id):
+    """Per-step node history from a graph checkpoint, oldest first."""
+    config = {"configurable": {"thread_id": thread_id}}
+    steps = []
+    try:
+        for snap in graph.get_state_history(config):
+            node = snap.next[0] if snap.next else ""
+            if not node or node == "__end__":
+                continue
+            steps.append({"node": node,
+                          "at": (snap.created_at or "")[:19].replace("T", " ")})
+            if len(steps) >= 40:
+                break
+    except Exception:
+        return []
+    steps.reverse()
+    return steps
+
+
+def _graph_status(project):
+    """LangGraph runtime status for the dashboard pipeline badge."""
+    try:
+        from agent.graphs import architecture as arch_graph
+        from agent.graphs import supervise as sup_graph
+        from knowledge.revision import project_lock
+        thread_id = arch_graph.thread_id_for(project)
+        graph = arch_graph._graph()
+        snap = graph.get_state({"configurable": {"thread_id": thread_id}})
+        values = snap.values if snap else {}
+        supervised = 0
+        escalations = 0
+        try:
+            from agent import supervise as sup_mod
+            supervised = len(sup_mod.list_enabled())
+            escalations = len(sup_mod.pending_escalations())
+        except Exception:
+            pass
+        return {
+            "architecture": {
+                "thread": thread_id,
+                "busy": project_lock(project).locked(),
+                "last_code": values.get("code") or 0,
+                "attempts": values.get("attempt") or 0,
+                "trace": values.get("trace") or [],
+                "steps": _thread_steps(graph, thread_id),
+            },
+            "supervise": {"sessions": supervised, "escalations": escalations},
+        }
+    except Exception as exc:
+        return {"error": str(exc)[:200]}
+
+
 def _queue_analysis(project, event):
     if (not model_client.configured(STATE.get('model'))
             or event.get('is_completed') is False
@@ -333,6 +385,7 @@ class Handler(BaseHTTPRequestHandler):
             map_data["ignored_sessions"] = config.get("ignored_sessions") or []
             from knowledge import revision
             map_data['architecture_job'] = revision.status(project)
+            map_data['graphs'] = _graph_status(project)
             self._send(200, json.dumps(map_data, ensure_ascii=False))
         elif parsed.path == "/api/events/stream":
             project = (params.get("project") or [""])[0]
