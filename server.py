@@ -4,11 +4,14 @@ Endpoints:
   GET  /api/map?project=<abs path>[&top=N]
   GET  /api/events/stream?project=<abs path>   (SSE)
   GET  /api/config
+  GET  /api/skills                             (locked contracts + user style overlays)
+  POST /api/agent/chat                         (observer desk chat; no ACP inject)
   POST /api/config                             (projects list + model config)
   POST /api/components                         (LLM architecture synthesis → knowledge store)
   POST /api/components/update                  (incremental architecture revision)
   POST /api/file_deep_analysis                 (on-demand agent deep-dive of one file)
-  POST /hooks/claude                           (observe-only hook receiver)
+  POST /hooks/claude                           (observe hook receiver)
+  POST /hooks/claude/stop                      (optional Stop continuation when supervised)
   GET  /                                       (web UI)
 """
 
@@ -501,6 +504,37 @@ class Handler(BaseHTTPRequestHandler):
                 "active_model_id": config.get("active_model_id") or (models[0]["id"] if models else ""),
                 "models": safe_models
             }, ensure_ascii=False))
+        elif parsed.path == "/api/skills":
+            from agent.skills.loader import fingerprint, list_skills, user_skills_dir
+            template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                         "agent", "skills", "user_template.md")
+            try:
+                with open(template_path, "r", encoding="utf-8") as handle:
+                    template = handle.read()
+            except OSError:
+                template = ""
+            config = store_mod.load_config()
+            skills = [item.public_record() for item in list_skills(config)]
+            self._send(200, json.dumps({
+                "ok": True,
+                "skills": skills,
+                "fingerprint": fingerprint(config),
+                "user_dir": user_skills_dir(),
+                "template": template,
+            }, ensure_ascii=False))
+        elif parsed.path == "/api/supervise":
+            from agent import supervise
+            hook = os.path.join(os.path.dirname(os.path.abspath(__file__)), "hooks", "claude-hook.mjs")
+            try:
+                pending = supervise.pending_escalations()
+            except Exception:
+                pending = []
+            self._send(200, json.dumps({
+                "ok": True,
+                "sessions": supervise.list_enabled(),
+                "pending_escalations": pending,
+                "claude_hook": "node %s" % hook,
+            }, ensure_ascii=False))
         else:
             self._send(404, json.dumps({"error": "not found"}))
 
@@ -562,6 +596,131 @@ class Handler(BaseHTTPRequestHandler):
             store_mod.delete_model(config, mid)
             STATE["model"] = store_mod.get_active_model(config)
             self._send(200, json.dumps({"ok": True, "active_model_id": config.get("active_model_id")}, ensure_ascii=False))
+        elif parsed.path == "/api/skills/install":
+            from agent.skills.loader import fingerprint, install_skill
+            try:
+                skill = install_skill(
+                    markdown=payload.get("markdown"),
+                    path=payload.get("path"),
+                    skill_id=payload.get("id"),
+                )
+            except ValueError as exc:
+                self._send(400, json.dumps({"ok": False, "error": str(exc)}))
+                return
+            except PermissionError as exc:
+                self._send(403, json.dumps({"ok": False, "error": str(exc), "locked": True}))
+                return
+            self._send(200, json.dumps({
+                "ok": True, "skill": skill.public_record(), "fingerprint": fingerprint()
+            }, ensure_ascii=False))
+        elif parsed.path == "/api/skills/uninstall":
+            from agent.skills.loader import fingerprint, uninstall_skill
+            skill_id = str(payload.get("id") or "")
+            try:
+                uninstall_skill(skill_id)
+            except PermissionError as exc:
+                self._send(403, json.dumps({"ok": False, "error": str(exc), "locked": True}))
+                return
+            except ValueError as exc:
+                self._send(400, json.dumps({"ok": False, "error": str(exc)}))
+                return
+            self._send(200, json.dumps({"ok": True, "fingerprint": fingerprint()}, ensure_ascii=False))
+        elif parsed.path == "/api/skills/toggle":
+            from agent.skills.loader import fingerprint, toggle_skill
+            skill_id = str(payload.get("id") or "")
+            try:
+                enabled = toggle_skill(skill_id, bool(payload.get("enabled")))
+            except PermissionError as exc:
+                self._send(403, json.dumps({"ok": False, "error": str(exc), "locked": True}))
+                return
+            except (ValueError, KeyError) as exc:
+                self._send(400, json.dumps({"ok": False, "error": str(exc)}))
+                return
+            self._send(200, json.dumps({
+                "ok": True, "id": skill_id, "enabled": enabled, "fingerprint": fingerprint()
+            }, ensure_ascii=False))
+        elif parsed.path == "/api/agent/chat":
+            project = payload.get("project") or ""
+            question = str(payload.get("message") or payload.get("question") or "").strip()
+            if not project or not os.path.isdir(project) or not question:
+                self._send(400, json.dumps({"ok": False, "error": "project and message required"}))
+                return
+            model_cfg = STATE.get("model") or store_mod.get_active_model(store_mod.load_config())
+            if not model_client.configured(model_cfg):
+                self._send(400, json.dumps({"ok": False, "error": "model not configured"}))
+                return
+            history = payload.get("history") if isinstance(payload.get("history"), list) else []
+            try:
+                result = model_client.desk_chat(
+                    os.path.abspath(project), question, history=history,
+                    session_id=str(payload.get("session_id") or ""),
+                    model_cfg=model_cfg,
+                    lang=str(payload.get("lang") or "zh").lower(),
+                )
+            except Exception as exc:
+                self._send(502, json.dumps({"ok": False, "error": str(exc)[:200]}))
+                return
+            if not result:
+                self._send(502, json.dumps({"ok": False, "error": "desk chat failed"}))
+                return
+            self._send(200, json.dumps({"ok": True, **result}, ensure_ascii=False))
+        elif parsed.path == "/api/supervise":
+            from agent import supervise
+            self._send(200, json.dumps({
+                "ok": True,
+                "sessions": supervise.list_enabled(),
+            }, ensure_ascii=False))
+        elif parsed.path == "/api/supervise/toggle":
+            from agent import supervise
+            session_id = str(payload.get("session_id") or "")
+            agent_id = str(payload.get("agent_id") or "claude-code")
+            project = payload.get("project") or ""
+            if not session_id:
+                self._send(400, json.dumps({"ok": False, "error": "session_id required"}))
+                return
+            rec = supervise.set_enabled(
+                agent_id, session_id, project,
+                bool(payload.get("enabled")),
+                goal=str(payload.get("goal") or ""),
+            )
+            self._send(200, json.dumps({"ok": True, "session": rec}, ensure_ascii=False))
+        elif parsed.path == "/api/supervise/resume":
+            from agent import supervise
+            project = payload.get("project") or ""
+            session_id = str(payload.get("session_id") or "")
+            prompt = str(payload.get("prompt") or "").strip()
+            if not prompt:
+                model_cfg = STATE.get("model") or store_mod.get_active_model(store_mod.load_config())
+                result = model_client.desk_chat(
+                    os.path.abspath(project) if project else "",
+                    "The Codex session paused. If the user goal is unfinished, put a continuation instruction in nudge.",
+                    session_id=session_id, model_cfg=model_cfg,
+                    lang=str(payload.get("lang") or "zh").lower(),
+                ) if project else None
+                prompt = ((result or {}).get("nudge") or (result or {}).get("reply") or "").strip()
+            if not prompt:
+                self._send(400, json.dumps({"ok": False, "error": "no continuation prompt"}))
+                return
+            ok, detail = supervise.resume_codex(project, session_id, prompt)
+            self._send(200 if ok else 400, json.dumps({
+                "ok": ok, "detail": detail, "prompt": prompt[:800],
+            }, ensure_ascii=False))
+        elif parsed.path == "/api/supervise/escalate":
+            from agent import supervise
+            session_id = str(payload.get("session_id") or "")
+            agent_id = str(payload.get("agent_id") or "claude-code")
+            action = str(payload.get("action") or "continue")
+            if not session_id:
+                self._send(400, json.dumps({"ok": False, "error": "session_id required"}))
+                return
+            try:
+                ok, decision = supervise.resume_escalation(agent_id, session_id, action)
+            except Exception as exc:
+                self._send(502, json.dumps({"ok": False, "error": str(exc)[:200]}))
+                return
+            self._send(200 if ok else 400, json.dumps({
+                "ok": ok, "decision": decision,
+            }, ensure_ascii=False))
         elif parsed.path == "/api/model/test":
             model_cfg = payload.get("model")
             if not model_cfg or not isinstance(model_cfg, dict):
@@ -819,6 +978,15 @@ class Handler(BaseHTTPRequestHandler):
                                             "event_id": event["event_id"]}))
             except Exception as exc:
                 self._send(200, json.dumps({"ok": False, "error": str(exc)[:200]}))
+        elif parsed.path == "/hooks/claude/stop":
+            from agent import supervise
+            try:
+                model_cfg = STATE.get("model") or store_mod.get_active_model(store_mod.load_config())
+                lang = store_mod.load_config().get("language") or "zh"
+                decision = supervise.decide_stop(payload, model_cfg, lang=lang)
+            except Exception:
+                decision = {}
+            self._send(200, json.dumps(decision, ensure_ascii=False))
         else:
             self._send(404, json.dumps({"error": "not found"}))
 

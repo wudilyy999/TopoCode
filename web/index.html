@@ -608,6 +608,27 @@
   #model-backdrop {
     position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 155; display: none;
   }
+  #skills-modal, #desk-modal {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 640px; max-width: 94vw; max-height: 84vh;
+    background: #161b22; border: 1px solid #388bfd; box-shadow: 0 16px 48px rgba(0,0,0,0.85); border-radius: 10px;
+    padding: 20px; display: none; z-index: 160; flex-direction: column; overflow: hidden; min-height: 0;
+  }
+  #desk-modal { width: 680px; }
+  #skills-backdrop, #desk-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 155; display: none;
+  }
+  .desk-msg { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; line-height: 1.55; }
+  .desk-msg.user { background: #1a2333; color: var(--txt-main); }
+  .desk-msg.agent { background: #141820; color: var(--txt); }
+  .desk-nudge { margin-top: 8px; padding: 8px; background: #101820; border: 1px dashed #4d7ec8; border-radius: 6px; font-size: 12px; color: #c5d8ff; white-space: pre-wrap; }
+  .skill-card {
+    background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 10px 12px;
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+  }
+  .skill-card.locked { border-color: #3d4f66; background: #121820; }
+  .skill-card .skill-name { font-size: 13px; font-weight: 600; color: var(--txt-main); }
+  .skill-card .skill-meta { font-size: 11px; color: var(--dim); margin-top: 3px; line-height: 1.45; }
+  .skill-lock { font-size: 10px; color: #79c0ff; border: 1px solid #388bfd; border-radius: 4px; padding: 1px 6px; }
 
   /* Clickable Tech Keyword in Architecture Map */
   .kw-pill-clickable {
@@ -744,6 +765,13 @@
   .project-ctrl-group { background: var(--panel); border-color: var(--line); padding: 7px 10px; gap: 10px; }
   #project-select { background: var(--panel); border-color: var(--line); color: var(--txt-main); padding: 5px 8px; font-size: 12px; }
   .header-right { row-gap: 8px; }
+  .btn-skills {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; font-size: 12px; font-weight: 600;
+    background: #1c2a40; border: 1px solid #4d7ec8; color: #c5d8ff;
+    border-radius: 6px; white-space: nowrap; flex-shrink: 0;
+  }
+  .btn-skills:hover { background: #243654; border-color: #79c0ff; color: #fff; }
   #model-panel { background: var(--panel); }
   .toolbar-row { padding: 8px 20px; gap: 8px; background: var(--bg); border-bottom-color: var(--line); }
   .toolbar-row button { padding: 6px 12px; font-size: 12px; }
@@ -834,7 +862,7 @@
   .interview-card { background: var(--panel); border-color: var(--line); padding: 16px; }
   .interview-q { color: var(--txt-main); font-size: 14px; line-height: 1.7; }
   .interview-a { background: var(--bg); color: var(--txt); font-family: inherit; font-size: 14px; line-height: 1.8; padding: 12px; }
-  #model-modal, #discovery-modal, #dict-modal { background: var(--panel); border-color: var(--line); border-radius: 12px; box-shadow: 0 20px 70px #0008; padding: 24px; }
+  #model-modal, #discovery-modal, #dict-modal, #skills-modal, #desk-modal { background: var(--panel); border-color: var(--line); border-radius: 12px; box-shadow: 0 20px 70px #0008; padding: 24px; }
   #discovery-modal { width: 780px; max-height: calc(100dvh - 32px); overflow-y: auto; }
   #discovery-modal > div { flex-shrink: 0; }
   #discovery-list-container { flex: 0 0 auto; min-height: 220px; max-height: 42vh; }
@@ -842,7 +870,7 @@
   .disc-card:hover { background: var(--panel-hover); border-color: var(--dim); }
   .disc-name { font-size: 14px; }
   .disc-meta { color: var(--dim); gap: 8px; }
-  #model-backdrop, #discovery-backdrop, #tech-dict-backdrop { background: #0008; backdrop-filter: blur(2px); }
+  #model-backdrop, #discovery-backdrop, #tech-dict-backdrop, #skills-backdrop, #desk-backdrop { background: #0008; backdrop-filter: blur(2px); }
   .toast-prompt { background: var(--panel); border-color: var(--line); box-shadow: 0 12px 36px #0006; animation: none; }
   .toast-title { color: var(--accent); }
   .pulse-glow { animation: none; }
@@ -867,7 +895,7 @@
     .session-header > .session-meta { width: 100%; }
     .session-folder-path { max-width: 100%; }
     #file-analysis-modal, #tech-dict-modal { padding: 16px; }
-    #discovery-modal, #model-modal { padding: 16px; max-width: calc(100vw - 24px); }
+    #discovery-modal, #model-modal, #skills-modal, #desk-modal { padding: 16px; max-width: calc(100vw - 24px); }
     #discovery-modal > div { flex-wrap: wrap; gap: 10px; }
     #discovery-modal button { white-space: normal; }
     .disc-card { flex-direction: column; }
@@ -910,6 +938,14 @@
       <span id="model-status" style="font-size:10.5px; margin-left:4px;"></span>
     </div>
 
+    <button id="btn-open-desk-modal" class="btn-skills" title="与 TopoCode 对话">
+      <span aria-hidden="true">💬</span>
+      <span id="desk-btn-label">对话</span>
+    </button>
+    <button id="btn-open-skills-modal" class="btn-skills" title="分析技能">
+      <span aria-hidden="true">🧩</span>
+      <span id="skills-btn-label">分析技能</span>
+    </button>
     <button id="btn-discovery" style="background:#1a2333; border:1px solid #388bfd; color:#79c0ff; display:inline-flex; align-items:center; gap:4px; font-size:11.5px; padding:4px 8px;">
       <span>🔔 嗅探中心</span>
       <span id="discovery-badge" style="background:#1f6feb; color:#fff; font-size:9.5px; padding:1px 5px; border-radius:8px; display:none;">0</span>
@@ -1128,6 +1164,69 @@
   </div>
 </div>
 
+<div id="skills-backdrop" onclick="closeSkillsModal()"></div>
+<div id="skills-modal">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid var(--line); padding-bottom:10px;">
+    <div>
+      <h3 id="skills-modal-title" style="margin:0; font-size:15px; color:var(--txt-main);">🧩 分析技能</h3>
+      <div id="skills-modal-sub" style="color:var(--dim); font-size:11.5px; margin-top:4px;">
+        会话追踪与架构蓝图由系统锁定 skill 负责，不可卸载。可叠加自己的风格 skill。
+      </div>
+    </div>
+    <button style="background:none; border:none; color:var(--dim); font-size:18px; cursor:pointer;" onclick="closeSkillsModal()">✕</button>
+  </div>
+  <div id="skills-list" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px; min-height:0;"></div>
+  <div style="margin-top:12px; border-top:1px solid var(--line); padding-top:12px; display:flex; flex-direction:column; gap:8px; flex-shrink:0;">
+    <div id="skills-add-label" style="font-size:12px; color:var(--txt-main); font-weight:600;">添加风格 skill</div>
+    <input id="skills-path" placeholder="/absolute/path/to/SKILL.md" style="width:100%; box-sizing:border-box;">
+    <textarea id="skills-markdown" rows="6" placeholder="---&#10;id: my-style&#10;name: My analysis style&#10;applies_to: [architecture, dialogue]&#10;---" style="width:100%; box-sizing:border-box; font-family:ui-monospace,monospace; font-size:12px;"></textarea>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button class="primary" id="btn-install-skill">安装</button>
+      <span id="skills-status" style="font-size:11.5px; color:var(--dim);"></span>
+    </div>
+    <div id="skills-fingerprint" style="font-size:11px; color:var(--dim);"></div>
+  </div>
+</div>
+
+<div id="desk-backdrop" onclick="closeDeskModal()"></div>
+<div id="desk-modal">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid var(--line); padding-bottom:10px;">
+    <div>
+      <h3 id="desk-modal-title" style="margin:0; font-size:15px; color:var(--txt-main);">💬 对话</h3>
+      <div id="desk-modal-sub" style="color:var(--dim); font-size:11.5px; margin-top:4px;">
+        打开监督后，Claude 停手前会被拦住并回灌继续指令；Codex 用 exec resume 真正续跑。
+      </div>
+    </div>
+    <button style="background:none; border:none; color:var(--dim); font-size:18px; cursor:pointer;" onclick="closeDeskModal()">✕</button>
+  </div>
+  <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px; flex-shrink:0; flex-wrap:wrap;">
+    <label id="desk-session-label" style="font-size:12px; color:var(--dim); white-space:nowrap;">关注会话</label>
+    <select id="desk-session-select" style="flex:1; min-width:120px; font-size:12px;"></select>
+    <label style="display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--txt-main); white-space:nowrap;">
+      <input type="checkbox" id="desk-supervise">
+      <span id="desk-supervise-label">监督此会话</span>
+    </label>
+    <button id="btn-desk-resume" style="display:none;">继续干活</button>
+  </div>
+  <div id="desk-hook-hint" style="font-size:11.5px; color:var(--dim); margin-bottom:8px; line-height:1.5;"></div>
+  <div id="desk-escalation" style="display:none; border:1px solid #b7791f55; background:#b7791f14; border-radius:8px; padding:10px 12px; margin-bottom:8px; font-size:12px; line-height:1.6;">
+    <div id="desk-escalation-text" style="margin-bottom:8px;"></div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button id="btn-esc-extend" class="primary"></button>
+      <button id="btn-esc-disable"></button>
+      <button id="btn-esc-continue"></button>
+    </div>
+  </div>
+  <div id="desk-log" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px; min-height:180px;"></div>
+  <div style="margin-top:10px; border-top:1px solid var(--line); padding-top:10px; display:flex; flex-direction:column; gap:8px; flex-shrink:0;">
+    <textarea id="desk-input" rows="3" style="width:100%; box-sizing:border-box; font-size:13px;" placeholder="问这轮改动是否偏离目标，或让我起草一条继续干活的指令…"></textarea>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button class="primary" id="btn-desk-send">发送</button>
+      <span id="desk-status" style="font-size:11.5px; color:var(--dim);"></span>
+    </div>
+  </div>
+</div>
+
 <script>
 let DATA = null;
 let VIEW = "blueprint"; // Default: Layered architecture blueprint
@@ -1155,6 +1254,54 @@ const I18N = {
     brand_sub: "独立外挂式 Agent 观察",
     model_label: "🤖 模型:",
     test_btn: "测试",
+    skills_btn_title: "分析技能：锁定契约与自定义风格",
+    skills_btn_label: "分析技能",
+    desk_btn_title: "监督并对话：可拦住 Claude 停手，或续跑 Codex",
+    desk_btn_label: "对话",
+    desk_modal_title: "对话",
+    desk_modal_sub: "打开监督后，Claude 停手前会被拦住并回灌继续指令；Codex 用 exec resume 真正续跑。",
+    desk_session_label: "关注会话",
+    desk_session_all: "当前项目全部会话",
+    desk_input_ph: "问这轮改动是否偏离目标，或让我起草一条继续干活的指令…",
+    desk_send: "发送",
+    desk_sending: "思考中…",
+    desk_need_model: "请先配置分析模型",
+    desk_need_project: "请先选择项目",
+    desk_failed: "对话失败",
+    desk_nudge: "将回灌给 coding agent 的继续指令",
+    desk_copy: "复制",
+    desk_copied: "已复制",
+    desk_supervise: "监督此会话",
+    desk_resume: "继续干活",
+    desk_resumed: "已对 Codex 发起续跑",
+    desk_hook_claude: "Claude 需把 Stop 钩子指到（timeout 30）: {cmd}",
+    desk_need_session: "先选一条会话再打开监督",
+    desk_status_idle: "未见明显偏离",
+    desk_status_off_goal: "可能偏离目标",
+    desk_status_incomplete: "任务可能未完成",
+    desk_status_unknown: "证据不足",
+    desk_escalation: "自动催促次数已用完（{n} 次）。监督图已挂起等待人工决定。目标：{goal}；最近指令：{nudge}",
+    desk_esc_extend: "再给一轮额度",
+    desk_esc_disable: "关闭监督",
+    desk_esc_continue: "本轮放行",
+    desk_esc_done: "已执行",
+    skills_modal_title: "分析技能",
+    skills_modal_sub: "会话追踪与架构蓝图由系统锁定 skill 负责，不可卸载。可叠加自己的风格 skill。",
+    skills_locked: "系统锁定 · 不可卸载",
+    skills_user: "用户风格",
+    skills_empty: "尚未添加风格 skill",
+    skills_add: "添加风格 skill",
+    skills_install: "安装",
+    skills_uninstall: "卸载",
+    skills_enable: "启用",
+    skills_disable: "停用",
+    skills_applies: "作用于",
+    skills_fingerprint: "当前组合指纹",
+    skills_dir: "用户 skill 目录",
+    skills_install_ok: "已安装",
+    skills_install_fail: "安装失败",
+    surface_dialogue: "会话追踪",
+    surface_architecture: "架构蓝图",
     folder_browse:'浏览文件夹', folder_parent:'上一级',
     discovery_evidence_modified_file:'改动文件证据', discovery_evidence_cwd_only:'仅启动目录（低置信）',
     discovery_folder:'指定文件夹（绝对路径）', discovery_limit:'仅嗅探此文件夹', discovery_track_folder:'追踪此文件夹', discovery_scope_note:'候选仅限指定目录及其子目录；未设置时限于已追踪目录。已有追踪保持不变。',
@@ -1285,6 +1432,54 @@ const I18N = {
     brand_sub: "Stand-alone External Agent Observer",
     model_label: "🤖 Model:",
     test_btn: "Test",
+    skills_btn_title: "Analysis skills: locked contracts and custom style",
+    skills_btn_label: "Skills",
+    desk_btn_title: "Supervise and chat: block Claude stops or resume Codex",
+    desk_btn_label: "Chat",
+    desk_modal_title: "Chat",
+    desk_modal_sub: "With supervise on, Claude is blocked from stopping and given a continuation; Codex is resumed with exec resume.",
+    desk_session_label: "Focus session",
+    desk_session_all: "All sessions in this project",
+    desk_input_ph: "Ask whether this round drifted, or draft a continue-working prompt…",
+    desk_send: "Send",
+    desk_sending: "Thinking…",
+    desk_need_model: "Configure an analysis model first",
+    desk_need_project: "Select a project first",
+    desk_failed: "Chat failed",
+    desk_nudge: "Continuation that will be fed to the coding agent",
+    desk_copy: "Copy",
+    desk_copied: "Copied",
+    desk_supervise: "Supervise this session",
+    desk_resume: "Keep working",
+    desk_resumed: "Codex resume launched",
+    desk_hook_claude: "Point Claude Stop hook here (timeout 30): {cmd}",
+    desk_need_session: "Pick a session before enabling supervise",
+    desk_status_idle: "No clear drift",
+    desk_status_off_goal: "May be off goal",
+    desk_status_incomplete: "Task may be incomplete",
+    desk_status_unknown: "Not enough evidence",
+    desk_escalation: "Auto-nudge budget exhausted ({n}). The supervision graph is paused for a human decision. Goal: {goal}; last nudge: {nudge}",
+    desk_esc_extend: "Grant another budget",
+    desk_esc_disable: "Disable supervise",
+    desk_esc_continue: "Allow this stop",
+    desk_esc_done: "Done",
+    skills_modal_title: "Analysis skills",
+    skills_modal_sub: "Session tracking and the architecture blueprint are locked system skills and cannot be removed. Add your own skills for tone and emphasis.",
+    skills_locked: "Locked · cannot uninstall",
+    skills_user: "User style",
+    skills_empty: "No style skills yet",
+    skills_add: "Add a style skill",
+    skills_install: "Install",
+    skills_uninstall: "Uninstall",
+    skills_enable: "Enable",
+    skills_disable: "Disable",
+    skills_applies: "Applies to",
+    skills_fingerprint: "Active fingerprint",
+    skills_dir: "User skill directory",
+    skills_install_ok: "Installed",
+    skills_install_fail: "Install failed",
+    surface_dialogue: "Session tracking",
+    surface_architecture: "Architecture blueprint",
     folder_browse:'Browse folders', folder_parent:'Parent folder',
     discovery_evidence_modified_file:'modified-file evidence', discovery_evidence_cwd_only:'cwd only (low confidence)',
     discovery_folder:'Folder (absolute path)', discovery_limit:'Discover only this folder', discovery_track_folder:'Track this folder', discovery_scope_note:'Candidates stay inside this folder. Without a scope, only tracked folders are considered. Existing tracking is unchanged.',
@@ -1466,6 +1661,37 @@ function applyI18n() {
   const dictSearch = document.getElementById("tech-dict-search");
   if (dictSearch) dictSearch.placeholder = t("dict_search_ph");
 
+  const btnSkills = document.getElementById("btn-open-skills-modal");
+  if (btnSkills) btnSkills.title = t("skills_btn_title");
+  const skillsBtnLabel = document.getElementById("skills-btn-label");
+  if (skillsBtnLabel) skillsBtnLabel.textContent = t("skills_btn_label");
+  const btnDesk = document.getElementById("btn-open-desk-modal");
+  if (btnDesk) btnDesk.title = t("desk_btn_title");
+  const deskBtnLabel = document.getElementById("desk-btn-label");
+  if (deskBtnLabel) deskBtnLabel.textContent = t("desk_btn_label");
+  const deskTitle = document.getElementById("desk-modal-title");
+  if (deskTitle) deskTitle.textContent = "💬 " + t("desk_modal_title");
+  const deskSub = document.getElementById("desk-modal-sub");
+  if (deskSub) deskSub.textContent = t("desk_modal_sub");
+  const deskSess = document.getElementById("desk-session-label");
+  if (deskSess) deskSess.textContent = t("desk_session_label");
+  const deskSend = document.getElementById("btn-desk-send");
+  if (deskSend) deskSend.textContent = t("desk_send");
+  const deskInput = document.getElementById("desk-input");
+  if (deskInput) deskInput.placeholder = t("desk_input_ph");
+  const deskSup = document.getElementById("desk-supervise-label");
+  if (deskSup) deskSup.textContent = t("desk_supervise");
+  const deskResume = document.getElementById("btn-desk-resume");
+  if (deskResume) deskResume.textContent = t("desk_resume");
+  const skillsTitle = document.getElementById("skills-modal-title");
+  if (skillsTitle) skillsTitle.textContent = "🧩 " + t("skills_modal_title");
+  const skillsSub = document.getElementById("skills-modal-sub");
+  if (skillsSub) skillsSub.textContent = t("skills_modal_sub");
+  const skillsAdd = document.getElementById("skills-add-label");
+  if (skillsAdd) skillsAdd.textContent = t("skills_add");
+  const btnInstall = document.getElementById("btn-install-skill");
+  if (btnInstall) btnInstall.textContent = t("skills_install");
+
   const bcl = document.getElementById("btn-collapse-left");
   if (bcl) bcl.textContent = isEn ? "◀ Collapse" : "◀ 收起";
   const bcr = document.getElementById("btn-collapse-right");
@@ -1519,25 +1745,11 @@ async function loadTechDictionary() {
       DICT_ENTRIES = data.dict.entries || {};
       DICT_KEYWORDS = data.dict.keywords || [];
       KEYWORD_TO_ID.clear();
-
-      const terms = [];
       DICT_KEYWORDS.forEach(kw => {
         const t = (kw.term || "").trim();
         if (!t || t.length < 2) return;
         KEYWORD_TO_ID.set(t.toLowerCase(), kw.id);
-        const escaped = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '[\\s_\\-]+');
-        const prefix = /^[a-z0-9]/i.test(t) ? '(?<![a-z0-9])' : '';
-        const suffix = /[a-z0-9]$/i.test(t) ? '(?![a-z0-9])' : '';
-        terms.push(prefix + escaped + suffix);
       });
-
-      if (terms.length) {
-        GLOBAL_KW_REGEX = new RegExp(`(${terms.join("|")})`, "gi");
-      }
-      // 如果界面已渲染，触发一次局部更新以展示关键词高亮
-      if (DATA && VIEW === "blueprint") {
-        renderLayeredBlueprint();
-      }
     }
   } catch (e) {
     console.warn("Failed to load tech dictionary:", e);
@@ -1567,7 +1779,11 @@ function closeTechDict() {
 }
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeTechDict();
+  if (e.key === "Escape") {
+    closeTechDict();
+    if (typeof closeSkillsModal === "function") closeSkillsModal();
+    if (typeof closeDeskModal === "function") closeDeskModal();
+  }
 });
 
 function backTechDict() {
@@ -2079,6 +2295,367 @@ function openModelModal() {
 function closeModelModal() {
   document.getElementById("model-backdrop").style.display = "none";
   document.getElementById("model-modal").style.display = "none";
+}
+
+let SKILLS_CACHE = { skills: [], fingerprint: "", user_dir: "", template: "" };
+
+function surfaceLabel(id) {
+  return id === "dialogue" ? t("surface_dialogue") : id === "architecture" ? t("surface_architecture") : id;
+}
+
+async function loadSkills() {
+  const res = await fetch("/api/skills");
+  const data = await res.json();
+  if (!data.ok) return;
+  SKILLS_CACHE = data;
+  const list = document.getElementById("skills-list");
+  const locked = (data.skills || []).filter(s => s.locked);
+  const user = (data.skills || []).filter(s => !s.locked);
+  const cards = [];
+  locked.forEach(s => {
+    const title = CURRENT_LANG === "zh" && s.name_zh ? s.name_zh : s.name;
+    cards.push(`<div class="skill-card locked">
+      <div>
+        <div class="skill-name">${esc(title)} <span class="skill-lock">${esc(t("skills_locked"))}</span></div>
+        <div class="skill-meta">${esc(s.description || "")}</div>
+        <div class="skill-meta">${esc(t("skills_applies"))}: ${(s.applies_to || []).map(surfaceLabel).map(esc).join(" · ")}${s.schema_version ? " · " + esc(s.schema_version) : ""}</div>
+      </div>
+    </div>`);
+  });
+  if (!user.length) {
+    cards.push(`<div class="skill-meta">${esc(t("skills_empty"))}</div>`);
+  } else {
+    user.forEach(s => {
+      cards.push(`<div class="skill-card">
+        <div>
+          <div class="skill-name">${esc(s.name)}</div>
+          <div class="skill-meta">${esc(s.description || "")}</div>
+          <div class="skill-meta">${esc(t("skills_applies"))}: ${(s.applies_to || []).map(surfaceLabel).map(esc).join(" · ")}</div>
+        </div>
+        <div style="display:flex; gap:6px; flex-shrink:0;">
+          <button onclick="toggleUserSkill('${esc(s.id)}', ${s.enabled ? "false" : "true"})">${esc(s.enabled ? t("skills_disable") : t("skills_enable"))}</button>
+          <button onclick="uninstallUserSkill('${esc(s.id)}')" style="color:#f85149; border-color:#da3633;">${esc(t("skills_uninstall"))}</button>
+        </div>
+      </div>`);
+    });
+  }
+  if (list) list.innerHTML = cards.join("");
+  const fp = document.getElementById("skills-fingerprint");
+  if (fp) fp.textContent = `${t("skills_fingerprint")}: ${data.fingerprint || ""} · ${t("skills_dir")}: ${data.user_dir || ""}`;
+  const md = document.getElementById("skills-markdown");
+  if (md && !md.value.trim() && data.template) md.placeholder = data.template;
+}
+
+function openSkillsModal() {
+  document.getElementById("skills-backdrop").style.display = "block";
+  document.getElementById("skills-modal").style.display = "flex";
+  loadSkills().catch(err => {
+    const status = document.getElementById("skills-status");
+    if (status) status.textContent = String(err.message || err);
+  });
+}
+
+function closeSkillsModal() {
+  document.getElementById("skills-backdrop").style.display = "none";
+  document.getElementById("skills-modal").style.display = "none";
+}
+
+let DESK_HISTORY = [];
+let DESK_SUPERVISED = {};
+let DESK_HOOK_CMD = "";
+let DESK_ESCALATIONS = [];
+
+function selectedDeskAgent() {
+  const sid = document.getElementById("desk-session-select").value;
+  if (!sid || !DATA) return "claude-code";
+  const ev = (DATA.events || []).find(e => e.session_id === sid);
+  return (ev && ev.agent_id) || "claude-code";
+}
+
+function deskSessionKey() {
+  const sid = document.getElementById("desk-session-select").value;
+  return sid ? selectedDeskAgent() + ":" + sid : "";
+}
+
+function refreshDeskSuperviseUi() {
+  const sid = document.getElementById("desk-session-select").value;
+  const agent = selectedDeskAgent();
+  const box = document.getElementById("desk-supervise");
+  const resume = document.getElementById("btn-desk-resume");
+  const hint = document.getElementById("desk-hook-hint");
+  if (box) box.checked = !!(sid && DESK_SUPERVISED[agent + ":" + sid]);
+  if (resume) resume.style.display = (sid && agent === "codex") ? "inline-block" : "none";
+  if (hint) {
+    hint.textContent = (!sid || agent !== "claude-code" || !DESK_HOOK_CMD)
+      ? ""
+      : t("desk_hook_claude").replace("{cmd}", DESK_HOOK_CMD);
+  }
+}
+
+async function loadDeskSupervise() {
+  try {
+    const res = await fetch("/api/supervise");
+    const data = await res.json();
+    if (data.ok) {
+      DESK_SUPERVISED = data.sessions || {};
+      DESK_HOOK_CMD = data.claude_hook || "";
+      DESK_ESCALATIONS = data.pending_escalations || [];
+    }
+  } catch (_) {}
+  refreshDeskSuperviseUi();
+  renderDeskEscalation();
+}
+
+function deskSessionOptions() {
+  const select = document.getElementById("desk-session-select");
+  if (!select) return;
+  const prev = select.value;
+  const seen = new Map();
+  (DATA && DATA.events ? DATA.events : []).forEach(ev => {
+    const sid = ev.session_id;
+    if (!sid || seen.has(sid)) return;
+    const preview = String((ev.request_text || ev.evidence_summary || sid)).replace(/\s+/g, " ").slice(0, 48);
+    seen.set(sid, preview || sid.slice(0, 12));
+  });
+  select.innerHTML = `<option value="">${esc(t("desk_session_all"))}</option>` +
+    [...seen.entries()].map(([id, label]) => `<option value="${esc(id)}">${esc(label)}</option>`).join("");
+  if ([...seen.keys()].includes(prev)) select.value = prev;
+  refreshDeskSuperviseUi();
+}
+
+function openDeskModal() {
+  document.getElementById("desk-backdrop").style.display = "block";
+  document.getElementById("desk-modal").style.display = "flex";
+  deskSessionOptions();
+  loadDeskSupervise();
+  renderDeskLog();
+}
+
+function closeDeskModal() {
+  document.getElementById("desk-backdrop").style.display = "none";
+  document.getElementById("desk-modal").style.display = "none";
+}
+
+function deskStatusLabel(status) {
+  if (status === "idle") return t("desk_status_idle");
+  if (status === "off_goal") return t("desk_status_off_goal");
+  if (status === "incomplete") return t("desk_status_incomplete");
+  return t("desk_status_unknown");
+}
+
+function renderDeskLog() {
+  const log = document.getElementById("desk-log");
+  if (!log) return;
+  if (!DESK_HISTORY.length) {
+    log.innerHTML = `<div class="skill-meta">${esc(t("desk_modal_sub"))}</div>`;
+    return;
+  }
+  log.innerHTML = DESK_HISTORY.map((turn, idx) => {
+    if (turn.role === "user") {
+      return `<div class="desk-msg user">${esc(turn.text)}</div>`;
+    }
+    const nudge = turn.nudge
+      ? `<div class="desk-nudge"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:4px;"><b>${esc(t("desk_nudge"))}</b><button onclick="copyDeskNudge(${idx})">${esc(t("desk_copy"))}</button></div>${esc(turn.nudge)}</div>`
+      : "";
+    const st = turn.status ? `<div class="skill-meta">${esc(deskStatusLabel(turn.status))}</div>` : "";
+    return `<div class="desk-msg agent">${esc(turn.text)}${st}${nudge}</div>`;
+  }).join("");
+  log.scrollTop = log.scrollHeight;
+}
+
+async function copyDeskNudge(idx) {
+  const turn = DESK_HISTORY[idx];
+  if (!turn || !turn.nudge) return;
+  try {
+    await navigator.clipboard.writeText(turn.nudge);
+    const status = document.getElementById("desk-status");
+    if (status) status.textContent = t("desk_copied");
+  } catch (_) {}
+}
+
+function renderDeskEscalation() {
+  const box = document.getElementById("desk-escalation");
+  const text = document.getElementById("desk-escalation-text");
+  if (!box || !text) return;
+  const item = DESK_ESCALATIONS.find(e => {
+    const key = deskSessionKey();
+    return key && e.thread === key;
+  }) || DESK_ESCALATIONS[0];
+  if (!item) { box.style.display = "none"; return; }
+  const v = item.value || {};
+  text.innerHTML = esc(t("desk_escalation"))
+    .replace("{n}", String(v.blocks != null ? v.blocks : "?"))
+    .replace("{goal}", esc(v.goal || "-"))
+    .replace("{nudge}", esc(v.last_nudge || "-"));
+  document.getElementById("btn-esc-extend").textContent = t("desk_esc_extend");
+  document.getElementById("btn-esc-disable").textContent = t("desk_esc_disable");
+  document.getElementById("btn-esc-continue").textContent = t("desk_esc_continue");
+  box.dataset.thread = item.thread;
+  box.style.display = "block";
+}
+
+async function actDeskEscalation(action) {
+  const box = document.getElementById("desk-escalation");
+  const status = document.getElementById("desk-status");
+  const thread = (box && box.dataset.thread) || "";
+  const [agent_id, ...rest] = thread.split(":");
+  const session_id = rest.join(":");
+  if (!session_id) return;
+  if (status) status.textContent = t("desk_sending");
+  try {
+    const res = await fetch("/api/supervise/escalate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ agent_id, session_id, action })
+    });
+    const data = await res.json();
+    if (status) status.textContent = data.ok ? t("desk_esc_done") : (data.error || t("desk_failed"));
+  } catch (err) {
+    if (status) status.textContent = t("desk_failed") + ": " + err.message;
+  }
+  await loadDeskSupervise();
+}
+
+async function toggleDeskSupervise() {
+  const status = document.getElementById("desk-status");
+  const sid = document.getElementById("desk-session-select").value;
+  const box = document.getElementById("desk-supervise");
+  if (!sid) {
+    if (box) box.checked = false;
+    if (status) status.textContent = t("desk_need_session");
+    return;
+  }
+  const res = await fetch("/api/supervise/toggle", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_id: sid,
+      agent_id: selectedDeskAgent(),
+      project: PROJECT,
+      enabled: !!(box && box.checked)
+    })
+  });
+  const data = await res.json();
+  if (data.ok) await loadDeskSupervise();
+}
+
+async function resumeDeskSession() {
+  const status = document.getElementById("desk-status");
+  const sid = document.getElementById("desk-session-select").value;
+  if (!sid) {
+    status.textContent = t("desk_need_session");
+    return;
+  }
+  status.textContent = t("desk_sending");
+  try {
+    const res = await fetch("/api/supervise/resume", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ project: PROJECT, session_id: sid, lang: CURRENT_LANG })
+    });
+    const data = await res.json();
+    status.textContent = data.ok ? t("desk_resumed") : (data.error || data.detail || t("desk_failed"));
+    if (data.ok && data.prompt) {
+      DESK_HISTORY.push({ role: "agent", text: t("desk_resumed"), nudge: data.prompt, status: "incomplete" });
+      renderDeskLog();
+    }
+  } catch (err) {
+    status.textContent = t("desk_failed") + ": " + err.message;
+  }
+}
+
+async function sendDeskChat() {
+  const status = document.getElementById("desk-status");
+  const input = document.getElementById("desk-input");
+  const question = (input.value || "").trim();
+  if (!question) return;
+  if (!PROJECT) {
+    status.textContent = t("desk_need_project");
+    return;
+  }
+  input.value = "";
+  DESK_HISTORY.push({ role: "user", text: question });
+  renderDeskLog();
+  status.textContent = t("desk_sending");
+  const history = DESK_HISTORY.filter(turn => turn.role === "user" || turn.role === "agent")
+    .slice(-8)
+    .map(turn => ({ role: turn.role === "user" ? "user" : "assistant", text: turn.text }));
+  try {
+    const res = await fetch("/api/agent/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        project: PROJECT,
+        message: question,
+        session_id: document.getElementById("desk-session-select").value || "",
+        history,
+        lang: CURRENT_LANG
+      })
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      status.innerHTML = `<span style="color:#f85149">${esc(t("desk_failed"))}: ${esc(data.error || "")}</span>`;
+      return;
+    }
+    DESK_HISTORY.push({ role: "agent", text: data.reply, nudge: data.nudge || "", status: data.status || "unknown" });
+    renderDeskLog();
+    status.textContent = deskStatusLabel(data.status);
+  } catch (err) {
+    status.innerHTML = `<span style="color:#f85149">${esc(t("desk_failed"))}: ${esc(err.message)}</span>`;
+  }
+}
+
+async function installUserSkill() {
+  const status = document.getElementById("skills-status");
+  const path = (document.getElementById("skills-path").value || "").trim();
+  const markdown = (document.getElementById("skills-markdown").value || "").trim();
+  status.textContent = "";
+  try {
+    const res = await fetch("/api/skills/install", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(path ? { path } : { markdown })
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      status.innerHTML = `<span style="color:#f85149">${esc(t("skills_install_fail"))}: ${esc(data.error || "")}</span>`;
+      return;
+    }
+    status.innerHTML = `<span style="color:var(--success)">${esc(t("skills_install_ok"))}</span>`;
+    document.getElementById("skills-path").value = "";
+    document.getElementById("skills-markdown").value = "";
+    await loadSkills();
+  } catch (err) {
+    status.innerHTML = `<span style="color:#f85149">${esc(t("skills_install_fail"))}: ${esc(err.message)}</span>`;
+  }
+}
+
+async function uninstallUserSkill(id) {
+  const res = await fetch("/api/skills/uninstall", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id })
+  });
+  const data = await res.json();
+  if (!data.ok) {
+    alert(data.error || t("skills_install_fail"));
+    return;
+  }
+  await loadSkills();
+}
+
+async function toggleUserSkill(id, enabled) {
+  const res = await fetch("/api/skills/toggle", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, enabled })
+  });
+  const data = await res.json();
+  if (!data.ok) {
+    alert(data.error || t("skills_install_fail"));
+    return;
+  }
+  await loadSkills();
 }
 
 async function selectActiveModel(mid) {
@@ -4198,6 +4775,16 @@ function safeBind(id, event, handler) {
 
 safeBind("provider-preset-select", "onchange", (e) => selectActiveModel(e.target.value));
 safeBind("btn-open-model-modal", "onclick", openModelModal);
+safeBind("btn-open-skills-modal", "onclick", openSkillsModal);
+safeBind("btn-open-desk-modal", "onclick", openDeskModal);
+safeBind("btn-desk-send", "onclick", sendDeskChat);
+safeBind("desk-supervise", "onchange", toggleDeskSupervise);
+safeBind("btn-esc-extend", "onclick", () => actDeskEscalation("extend"));
+safeBind("btn-esc-disable", "onclick", () => actDeskEscalation("disable"));
+safeBind("btn-esc-continue", "onclick", () => actDeskEscalation("continue"));
+safeBind("desk-session-select", "onchange", refreshDeskSuperviseUi);
+safeBind("btn-desk-resume", "onclick", resumeDeskSession);
+safeBind("btn-install-skill", "onclick", installUserSkill);
 safeBind("btn-test-model", "onclick", testModelConnection);
 safeBind("btn-add-new-model", "onclick", resetModelEditForm);
 safeBind("btn-save-preset", "onclick", saveCurrentPreset);

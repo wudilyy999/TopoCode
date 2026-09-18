@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "topocode"
+version = "0.1.0"
+description = "Local read-only observer and learning companion for AI coding agents"
+requires-python = ">=3.9"
+dependencies = [
+    "langgraph>=0.6,<0.7",
+    "langgraph-checkpoint-sqlite>=2.0,<3.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["agent*", "config*", "discovery*", "graph*", "knowledge*", "model_client*", "platforms*", "session_tail*", "snapshot*"]

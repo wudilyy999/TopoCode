@@ -8,7 +8,7 @@
   <p align="center">
     <a href="#quick-start"><img src="https://img.shields.io/badge/Python-3.9%2B-blue?logo=python&logoColor=white" alt="Python 3.9+"></a>
     <a href="#privacy--safety"><img src="https://img.shields.io/badge/Network-127.0.0.1%20Only-2ea44f" alt="Localhost Only"></a>
-    <a href="#how-it-works"><img src="https://img.shields.io/badge/Dependencies-Zero%20External-orange" alt="Zero External Dependencies"></a>
+    <a href="#how-it-works"><img src="https://img.shields.io/badge/Orchestration-LangGraph-blueviolet" alt="LangGraph Orchestration"></a>
     <a href="#supported-agents"><img src="https://img.shields.io/badge/Agents-Claude%20%7C%20Codex%20%7C%20Kimi-purple" alt="Supported Agents"></a>
     <a href="#roadmap"><img src="https://img.shields.io/badge/Status-Active%20Development-brightgreen" alt="Status"></a>
   </p>
@@ -109,15 +109,17 @@ Autonomous coding agents (Claude Code, OpenAI Codex, Kimi Code, etc.) can genera
 ### Prerequisites
 - Python 3.9+
 - A modern web browser
-- Zero external package dependencies (built strictly with Python standard library)
+- Python packages: `langgraph`, `langgraph-checkpoint-sqlite` (pip install below)
 
 ### 1. Clone & Start
 ```bash
 git clone https://github.com/wudilyy999/TopoCode.git
 cd TopoCode
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
 
 # Launch observer for your target project directory
-python3 server.py --project /path/to/your/local/repo --port 8765
+python server.py --project /path/to/your/local/repo --port 8765
 ```
 
 ### 2. Open Web Dashboard
@@ -154,7 +156,7 @@ Use the **Discovery Center (嗅探中心)** in the top bar to inspect subdirecto
 1. **Passive Log Tailing**: Periodically reads append-only session JSONL files from supported agent directories.
 2. **Deterministic Round Chunking**: Segments interaction streams into distinct user rounds, verifying file changes with filesystem snapshots.
 3. **Local Event Persistence**: Writes events to `~/.TopoCode/` with file locks and idempotent `(session_id, turn_id)` deduplication.
-4. **Asynchronous Enrichment**: If configured, dispatches sanitized metadata to an OpenAI-compatible endpoint to enrich events with technical summaries.
+4. **Asynchronous Enrichment**: If configured, dispatches sanitized metadata to an OpenAI-compatible endpoint. Session tracking and architecture synthesis share one analysis runtime; two locked skills own the JSON contracts and a renderable architecture demonstration. Extra user skills may overlay tone and emphasis only.
 
 ---
 
@@ -204,7 +206,7 @@ TopoCode/
 ├── snapshot/              # Bounded project snapshots, AST symbol inspection, language detection
 ├── platforms/             # Pluggable agent adapters (Claude Code, Codex, Kimi, stubs)
 ├── session_tail/          # Read-only session tailing, round chunking, directory attribution
-├── agent/                 # Analysis agent, prompt contracts, token-budgeted memory compression
+├── agent/                 # Unified analysis runtime, locked dialogue/architecture skills, user style overlays, memory compression
 ├── knowledge/             # Architecture persistence, 240+ CS concepts, 430+ interview Q&As, RAG
 ├── graph/                 # Deterministic graph builder, PageRank importance ranking
 ├── web/                   # Single-page reactive dashboard (HTML5, SVG, CSS Variables, Vanilla JS)

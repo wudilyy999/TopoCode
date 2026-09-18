@@ -15,8 +15,8 @@ TopoCode 是**独立外挂式 Agent 项目实时分析系统**：只读监听本
 2. **本地回环**：HTTP 服务只绑 `127.0.0.1`，不鉴权，不暴露局域网。
 3. **脱敏出域**：送给分析模型的只有脱敏摘要与文件元数据（路径/行数/语言），
    绝不输出源码正文与 diff；key/token/secret/password/Authorization/Bearer 赋值一律替换为 `[credential omitted]`。
-4. **零重依赖**：后端只用 Python 标准库（ThreadingHTTPServer），前端是单页 `web/index.html`，不引入框架。
-5. **不做编排**：不做 goal/todo/调度/quota/执行 agent/管理 agent 生命周期。这是纯观察者。
+4. **运行时不依赖外部服务**：HTTP 服务只用 Python 标准库（ThreadingHTTPServer），前端是单页 `web/index.html` 不引入框架；内部 LLM 流水线用 `langgraph` + `langgraph-checkpoint-sqlite` 做状态图编排，checkpoint 落在 `~/.topocode/graphs/*.sqlite`。
+5. **不编排被观察 agent**：不做 goal/todo/调度/quota/执行 agent/管理 agent 生命周期，这是纯观察者；TopoCode 自身的分析/监督流水线允许用 LangGraph 状态图编排。
 6. **发布隔离**：默认模型列表为空，首次运行使用evidence_only；凭据保存在用户数据目录。会话JSONL、日志、运行缓存与本地配置不进入发布仓库。
 
 ## 2. 模块地图
@@ -27,7 +27,7 @@ TopoCode 是**独立外挂式 Agent 项目实时分析系统**：只读监听本
 | `snapshot/` | 项目快照与 diff：`scanner.py`(git ls-files 优先/目录遍历降级，512KB·64MB·8000 文件上限)、`languages.py`(后缀→语言/技术栈)、`redact.py`(密钥脱敏)、`ast_inspect.py`/`symbols.py`(符号提取)、`file_analysis.py`(单文件确定性解析) |
 | `platforms/` | 各 agent 平台适配器：`base.py` 定义统一接口，`claude.py`/`codex.py`/`kimi.py` 已实现，`stubs.py` 占位其余平台 |
 | `session_tail/tailer.py` | 会话轮询 tailer：读会话 JSONL → 按轮次(round)切分 → 生成 change event → 归因到登记目录 |
-| `agent/` | 分析智能体：`analyzer.py`(ProjectAnalysisAgent)、`prompts.py`(全部结构化提示词)、`memory.py`(会话记忆+用户画像记忆，含 token 预算自动压缩) |
+| `agent/` | 分析智能体：统一 `ProjectAnalysisAgent` runtime；`skills/builtin/` 锁定契约（dialogue / architecture，含示范 JSON）；`skills/loader.py` 组装锁定 skill + 用户风格 overlay；`prompts.py` 注入当场上下文；`memory.py` token 预算压缩；`graphs/` LangGraph 状态图：`architecture.py`(架构修订 acquire→load→synthesize/prepare_patch→patch→apply→validate→persist，模型失败 in-graph backoff 重试，锁冲突 409)、`supervise.py`(监督 load→assess→allow/block/escalate→interrupt 人工闸门)、`common.py`(SQLite checkpointer) |
 | `knowledge/` | 知识体系：`bank.py`(核心词库)、`bank_ext_*.py`(领域扩展包)、`rag.py`(BM25+n-gram 轻量检索)、`architecture.py`(架构知识持久化) |
 | `model_client/client.py` | 模型调用门面：仅在配置 OpenAI-compatible 模型时生效，失败一律降级 evidence_only |
 | `graph/` | `builder.py`(确定性图谱构建：repository/agent/session/turn/file/technology/knowledge 节点)、`rank.py`(文件重要性排序) |
@@ -51,7 +51,7 @@ agent 会话 JSONL ──轮询(tailer, ~20s)──▶ round 切分与目录归�
                                               │ 失败/未配置 → evidence_only
                                               └─ 完成后按同一 event_id upsert 并再次推送
                                                       │
-                                                      └─ 独立架构修订队列 → knowledge.revision.revise()
+                                                      └─ 独立架构修订队列 → knowledge.revision.revise() → agent/graphs/architecture.py 状态图
 Claude hook ──POST /hooks/claude──▶ 只保存观察证据，完整轮次分析由会话日志提供
 ```
 
@@ -96,15 +96,20 @@ change_summary以1-3句描述具体修改（最多400字），technical_meaning�
 画像、意图、独立总结、深度归因不进入新会话输出。UserMemory 保留已有画像、阅读水平与历史接触概念；
 此链路不调用独立画像模型。
 
-架构和会话均通过 `model_client` 创建同一个 `ProjectAnalysisAgent` 类，共用当前 active 模型；
-各自的 prompt 和 JSON 契约分开。监听、会话分析、架构增量修订使用独立 worker 和有界队列，模型慢时监听仍继续采集；分析完成后以同一 event_id 回写并推送更新。
-布局由前端确定性代码负责，模型提供结构化内容。架构输出有版本/路径/数量检查，尚无严格 JSON Schema
-约束解码、输出修复重试或跨模型质量保证；开发规范文件也未作为运行时模型提示自动读取。
+架构和会话均通过 `model_client` 创建同一个 `ProjectAnalysisAgent` 类，共用当前 active 模型。
+两套 JSON 契约分别由不可卸载的锁定 skill 负责：`agent/skills/builtin/dialogue/`（`dialogue.v4`）
+与 `agent/skills/builtin/architecture/`（`architecture.v2` / `architecture.update.v1`，含可渲染示范档案）。
+`prompts.py` 把当场证据拼进锁定 skill，再追加 `~/.topocode/skills/` 下启用的用户风格 overlay；
+用户 skill 只改语气与侧重点，禁止改 schema / 分层 / 文件路径，且从不执行脚本。
+监听、会话分析、架构增量修订使用独立 worker 和有界队列，模型慢时监听仍继续采集；分析完成后以同一 event_id 回写并推送更新。
+布局由前端确定性代码负责，模型提供结构化内容。架构输出有版本/路径/数量检查；档案写入 `skill_fingerprint`。
+尚无严格 JSON Schema 约束解码、输出修复重试或跨模型质量保证。换用户 skill 默认不重切组件，需用户再跑全量/增量。
 
 ### 4.2 架构知识（`knowledge/arch-<slug>.json`，schema `architecture.v3`）
 
 `overview{one_liner,purpose,architecture_style}` + `onboarding[≤5]` +
-`components[≤10]{id,name,layer,layer_title,summary,responsibilities,key_features,entry_files,dirs,files,file_roles,depends_on,revision}`。
+`components[≤10]{id,name,layer,layer_title,summary,responsibilities,key_features,entry_files,dirs,files,file_roles,depends_on,revision}` +
+`skill_fingerprint`（锁定 skill 与启用中的用户 overlay 哈希）。
 `id` 是稳定 kebab-case 身份（`^[a-z][a-z0-9-]{0,39}$`），`name` 只是展示名。
 `depends_on` 存目标 `id`；增量补丁仍可写 id 或展示名，入库时解析。
 layer 枚举：`presentation | agent | pipeline | infrastructure`。
@@ -194,11 +199,12 @@ project_relevance?, related_concepts[id...], interview_questions[{question,answe
 ## 5. 存储布局（`~/.TopoCode/`）
 
 ```
-config.json                 登记项目列表、模型供应商列表、active_model_id、忽略名单
+config.json                 登记项目列表、模型供应商列表、active_model_id、忽略名单、user_skills
 events-<slug>.jsonl         每项目事件流（append + upsert，文件锁并发安全）
 components-<slug>.json      旧版组件存储（兼容）
-knowledge/arch-<slug>.json  架构知识（architecture.v3，组件稳定 id）
+knowledge/arch-<slug>.json  架构知识（architecture.v3，组件稳定 id，skill_fingerprint）
 memory/user-<slug>.json     用户画像记忆（user.memory.v1，后台维护，UI 不展示）
+skills/<id>/SKILL.md        用户风格 overlay（不可替换锁定契约）
 offsets.json                各会话文件轮询偏移
 ```
 
@@ -241,9 +247,26 @@ discoverSessions / readSession / normalizeEvent），在 `tailer` 的平台注�
 触发 upsert；Bash/正则文本里的伪路径（如 `->`、`/i`）必须在适配器层过滤。
 
 ### 新增分析能力
-在 `agent/prompts.py` 加带 `schema_version` 的提示词，在 `analyzer.py` 加方法并做
-schema 校验，在 `model_client/client.py` 加门面，最后在 `server.py` 接路由。
+会话追踪与架构蓝图的契约只改锁定 skill：`agent/skills/builtin/dialogue/` 或
+`agent/skills/builtin/architecture/`（SKILL.md + 示范 JSON），然后在 `analyzer.py` 做 schema 校验。
+`prompts.py` 只负责把当场上下文交给 `compose_prompt`。新的分析表面才走
+`analyzer.py` → `model_client/client.py` → `server.py` 路由。
 任何模型失败必须降级为 evidence_only/错误 JSON，绝不抛穿请求线程。
+锁定 skill 的 `id` 为 `dialogue` 与 `architecture`，API 卸载返回 403。
+
+### 用户风格 Skill
+用户 skill 是可选 overlay，安装到数据目录 `skills/<id>/SKILL.md`，经
+`GET /api/skills`、`POST /api/skills/install|toggle|uninstall` 管理。
+frontmatter 需要 `id` / `name` / `applies_to: [dialogue, architecture]`。
+加载器会去掉用户正文里的 JSON 围栏和改写 schema/layer 的句子。
+用户 skill 不能占用锁定 id、不能声明 `locked: true`、不能被执行。
+
+### 桌面对话与可选监督
+`POST /api/agent/chat` 使用同一 `ProjectAnalysisAgent`。监督默认关闭。
+用户打开某会话监督后：Claude `Stop`/`SubagentStop` 钩子 `POST /hooks/claude/stop`，
+若判定未完成或偏离则返回 `{"decision":"block","reason":"..."}`，由 Claude 把 reason 当下一轮指令；
+每会话 10 分钟内最多续 3 次。Codex 由 `POST /api/supervise/resume` 调用 `codex exec resume`。
+不写 agent 家目录；Stop 钩子需用户把 `hooks/claude-hook.mjs` 配进 Claude settings（timeout 30）。
 
 ## 8. 物理证据优先原则
 
